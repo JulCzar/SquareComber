@@ -10,8 +10,8 @@
 #app {
   align-items: center;
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  height: 100vh;
 }
 
 .table {
@@ -25,7 +25,7 @@
 }
 
 .gem {
-  --length: 40px;
+  --length: 30px;
   align-items: center;
   display: flex;
   height: var(--length);

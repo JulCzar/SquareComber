@@ -6,10 +6,13 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
   const observers = []
   const state = {
     initialTarget: null,
-    initialX: null,
-    initialY: null
+    initialX: NaN,
+    initialY: NaN
   }
 
+  /**
+   * @param {(movementInfos: state) => void} observer 
+   */
   const subscribe = observer => {
     observers.push(observer)
   }
@@ -84,7 +87,7 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
    * @param {HTMLElement} target 
    */
   const movingSwipe = (diffX, diffY) => {
-    if (Math.abs(diffX) < 40 && Math.abs(diffY) < 40) return
+    if (Math.abs(diffX) < 35 && Math.abs(diffY) < 35) return
     
     const movement = { x: null, y: null, name: null }
     
