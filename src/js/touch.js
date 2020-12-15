@@ -1,12 +1,24 @@
 /**
- * 
  * @param {string} touchableInterfaceSelector the selector for the touch event listener
  */
 export const startTouchSupport = (touchableInterfaceSelector) => {
   const touchableInterface = document.querySelector(touchableInterfaceSelector)
+  const observers = []
   const state = {
+    initialTarget: null,
     initialX: null,
     initialY: null
+  }
+
+  const subscribe = observer => {
+    observers.push(observer)
+  }
+
+  const notifyAll = (movement, target) => {
+    console.log(`notifying ${observers.length} observer about a touch event`)
+
+    for (const observer of observers)
+      observer({ movement, target })
   }
   
   /**
@@ -15,6 +27,7 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
   const startMouseSwipe = e => {
     state.initialX = e.clientX
     state.initialY = e.clientY
+    state.initialTarget = e.target
   }
 
   /**
@@ -25,6 +38,7 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
 
     state.initialX = firstTouch.clientX
     state.initialY = firstTouch.clientY
+    state.initialTarget = e.target
   }
   
   /**
@@ -40,7 +54,7 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
     const diffX = state.initialX - currentX;
     const diffY = state.initialY - currentY;
 
-    movingSwipe(diffX, diffY, e.target)
+    movingSwipe(diffX, diffY)
 
     e.preventDefault();
   }
@@ -59,7 +73,7 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
     const diffX = state.initialX - currentX;
     const diffY = state.initialY - currentY;
 
-    movingSwipe(diffX, diffY, e.target)
+    movingSwipe(diffX, diffY)
 
     e.preventDefault();
   }
@@ -69,40 +83,45 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
    * @param {number} diffY 
    * @param {HTMLElement} target 
    */
-  const movingSwipe = (diffX, diffY, target) => {
+  const movingSwipe = (diffX, diffY) => {
     if (Math.abs(diffX) < 40 && Math.abs(diffY) < 40) return
-
-    const { row, col } = target.attributes
-
-    console.log(`item row: ${row.value}, col: ${col.value}`)
+    
+    const movement = { x: null, y: null, name: null }
     
     if (Math.abs(diffX) > Math.abs(diffY)) {
-      // sliding horizontally
+      movement.y = 0
+
       if (diffX > 0) {
-        // swiped left
-        console.log('swiped left');
-      } else {
-        // swiped right
-        console.log('swiped right');
-      }  
+        movement.x = 1
+        movement.name = 'left'
+      }
+      else {
+        movement.x = -1
+        movement.name = 'right'
+      }
     } else {
-      // sliding vertically
+      movement.x = 0
+
       if (diffY > 0) {
-        // swiped up
-        console.log('swiped up');
-      } else {
-        // swiped down
-        console.log('swiped down');
-      }  
+        movement.y = 1
+        movement.name = 'up'
+      }
+      else {
+        movement.y = -1
+        movement.name = 'down'
+      }
     }
 
     state.initialX = null;
     state.initialY = null;
+
+    notifyAll(movement, state.initialTarget)
   }
 
   const endSwipe = () => {
     state.initialX = null
     state.initialY = null
+    state.initialTarget = null;
   }
 
   touchableInterface.addEventListener('touchstart', startTouchSwipe, false)
@@ -111,4 +130,8 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
   touchableInterface.addEventListener('mousemove', movingMouseSwipe, false)
   touchableInterface.addEventListener('touchup', endSwipe, false)
   touchableInterface.addEventListener('mouseup', endSwipe, false)
+
+  return {
+    subscribe
+  }
 }

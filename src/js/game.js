@@ -25,6 +25,24 @@ export const createGameTable = (width = 10, height= 10) => {
       observer(grid)
   }
 
+  /**
+   * @param {{movement: {x: number, y: number}, target: HTMLElement}} movementInfos 
+   */
+  const handleMovement = movementInfos => {
+    const { movement, target } = movementInfos
+    const { x, y } = movement
+    const row = Number(target.attributes.row.value)
+    const col = Number(target.attributes.col.value)
+
+    if (row - y < 0 || col - x < 0 || col - x >= width || row - y >= height) return
+
+    const aux = grid[row][col]
+    grid[row][col] = grid[row-y][col-x]
+    grid[row-y][col-x] = aux
+
+    notifyAll()
+  }
+
   const subscribe = observer => {
     observers.push(observer)
   }
@@ -36,6 +54,7 @@ export const createGameTable = (width = 10, height= 10) => {
   return {
     grid,
     subscribe,
-    start
+    start,
+    handleMovement
   }
 }
