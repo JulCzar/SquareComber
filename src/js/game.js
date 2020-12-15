@@ -86,6 +86,8 @@ export const createGameTable = (width = 10, height= 10) => {
             {x,y: y+2, value: grid[y+2][x]}
           ]))
 
+    console.log(`found ${combos.length} valid combos.`)
+
     return combos;
   }
 
@@ -96,6 +98,8 @@ export const createGameTable = (width = 10, height= 10) => {
     for (const combo of comboList)
       for (const pos of combo.positions)
         grid[pos.y][pos.x] = -1
+        
+    console.log(`removed ${comboList.length} combos from grid`)
   }
 
   const handleCombos = () => {
