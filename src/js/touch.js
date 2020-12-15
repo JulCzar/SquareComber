@@ -51,8 +51,8 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
     const currentX = e.clientX;
     const currentY = e.clientY;
 
-    const diffX = state.initialX - currentX;
-    const diffY = state.initialY - currentY;
+    const diffX = currentX - state.initialX;
+    const diffY = currentY - state.initialY;
 
     movingSwipe(diffX, diffY)
 
@@ -70,8 +70,8 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
     const currentX = firstTouch.clientX;
     const currentY = firstTouch.clientY;
 
-    const diffX = state.initialX - currentX;
-    const diffY = state.initialY - currentY;
+    const diffX = currentX - state.initialX;
+    const diffY = currentY - state.initialY;
 
     movingSwipe(diffX, diffY)
 
