@@ -1,3 +1,5 @@
+import MovementInfo from './models/movement.js'
+
 /**
  * @param {string} touchableInterfaceSelector the selector for the touch event listener
  */
@@ -17,11 +19,15 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
     observers.push(observer)
   }
 
+  /**
+   * @param {MovementInfo} movement 
+   * @param {HTMLElement} target 
+   */
   const notifyAll = (movement, target) => {
     console.log(`notifying ${observers.length} observer about a touch event`)
 
     for (const observer of observers)
-      observer({ movement, target })
+      observer(movement, target)
   }
   
   /**
@@ -89,36 +95,36 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
   const movingSwipe = (diffX, diffY) => {
     if (Math.abs(diffX) < 35 && Math.abs(diffY) < 35) return
     
-    const movement = { x: null, y: null, direction: null }
-    
+    let x, y, direction
+
     if (Math.abs(diffX) > Math.abs(diffY)) {
-      movement.y = 0
+      y = 0
 
       if (diffX > 0) {
-        movement.x = 1
-        movement.direction = 'left'
+        x = 1
+        direction = 'right'
       }
       else {
-        movement.x = -1
-        movement.direction = 'right'
+        x = -1
+        direction = 'left'
       }
     } else {
-      movement.x = 0
+      x = 0
 
       if (diffY > 0) {
-        movement.y = 1
-        movement.direction = 'up'
+        y = 1
+        direction = 'down'
       }
       else {
-        movement.y = -1
-        movement.direction = 'down'
+        y = -1
+        direction = 'up'
       }
     }
 
     state.initialX = null;
     state.initialY = null;
 
-    notifyAll(movement, state.initialTarget)
+    notifyAll(new MovementInfo(x, y, direction), state.initialTarget)
   }
 
   const endSwipe = () => {

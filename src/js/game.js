@@ -1,5 +1,6 @@
 import Position from './models/position.js'
 import Combo from './models/combo.js'
+import MovementInfo from './models/movement.js'
 
 /**
  * @param {number} width Grid width, default = 10
@@ -94,8 +95,6 @@ export const createGameTable = (width = 10, height= 10) => {
 
     combos = reduceCombos(combos)
 
-    console.log(`found ${combos.length} valid combos.`)
-
     return combos;
   }
 
@@ -126,10 +125,11 @@ export const createGameTable = (width = 10, height= 10) => {
   }
 
   /**
-   * @param {{movement: {x: number, y: number}, target: HTMLElement}} movementInfos 
+   * @param {MovementInfo} movement 
+   * @param {HTMLElement} target
+   * @param {number} animationThreshold
    */
-  const handleMovement = movementInfos => {
-    const { movement, target } = movementInfos
+  const handleMovement = (movement, target, animationThreshold) => {
     const { x, y, direction } = movement
     const row = Number(target.attributes.row.value)
     const col = Number(target.attributes.col.value)
@@ -140,21 +140,17 @@ export const createGameTable = (width = 10, height= 10) => {
 
     console.log(`moving ${row}-${col} ${direction}`)
 
-    notifyAll()
-
     const combos = findCombos(grid)
 
-    if (!combos.length) setTimeout(() => {
+    if (!combos.length)  {
       updateItemPosition(row, col, x, y)
 
       console.log('invalid move')
-
-      notifyAll()
-    }, 100)
+    }
     else {
       handleCombos()
 
-      notifyAll()
+      setTimeout(notifyAll, animationThreshold/2)
     }
   }
 

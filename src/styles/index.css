@@ -1,10 +1,16 @@
 @charset "UTF-8";
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css');
+@import './animations.css';
 
 * {
   margin: 0;
   padding: 0;
   font-size: 100%;
+  --gridSize: 30px;
+}
+
+body {
+  background: #1e1e2e
 }
 
 #app {
@@ -25,12 +31,11 @@
 }
 
 .gem {
-  --length: 30px;
   align-items: center;
   display: flex;
-  height: var(--length);
+  height: var(--gridSize);
   justify-content: center;
-  width: var(--length);
+  width: var(--gridSize);
 }
 
 .fa-grin-tongue {

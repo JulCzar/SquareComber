@@ -1,0 +1,44 @@
+.gem.movement_up {
+  animation: movementUp;
+  animation-duration: var(--animationDuration);
+}
+
+.gem.movement_right {
+  animation: movementRight;
+  animation-duration: var(--animationDuration);
+}
+
+.gem.movement_down {
+  animation: movementDown;
+  animation-duration: var(--animationDuration);
+}
+
+.gem.movement_left {
+  animation: movementLeft;
+  animation-duration: var(--animationDuration);
+}
+
+
+@keyframes movementUp {
+  0% {}
+  50% {transform: translateY(calc(var(--gridSize) - var(--gridSize) - var(--gridSize)));}
+  100% {}
+}
+
+@keyframes movementRight {
+  0% {}
+  50% {transform: translateX(var(--gridSize));}
+  100% {}
+}
+
+@keyframes movementDown {
+  0% {}
+  50% {transform: translateY(var(--gridSize));}
+  100% {}
+}
+
+@keyframes movementLeft {
+  0% {}
+  50% {transform: translateX(calc(var(--gridSize) - var(--gridSize) - var(--gridSize)));}
+  100% {}
+}
