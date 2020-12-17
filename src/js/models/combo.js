@@ -29,19 +29,31 @@ export default class Combo {
    * @param {Combo} combo2 
    */
   static reduceCombo(combo1, combo2) {
-    const totalComboList = [...combo1.positions, ...combo2.positions]
-    const reducedPositionList = totalComboList.reduce((acc, val) => {
-      let isAlreadyIn = false
+    const totalPositionList = [...combo1.positions, ...combo2.positions]
+    const reducedPositionList = []
 
-      for (const pos of acc)
-        if (pos.equals(val))
-          isAlreadyIn = true
+    for (const pos of totalPositionList) {
+      let isPosAlreadyOnList = false
 
-      if (isAlreadyIn)
-        return acc
-      return [...acc, val]
-    }, [])
+      for (const checkedPos of reducedPositionList)
+        if (pos.equals(checkedPos)) isPosAlreadyOnList = true
+
+      if (!isPosAlreadyOnList) reducedPositionList.push(pos)
+    }
 
     return new Combo('reduced', reducedPositionList.length, reducedPositionList)
+  }
+
+  /**
+   * 
+   * @param {Combo[]} comboList 
+   */
+  static isReducible(comboList) {
+    for (let i=0; i<(comboList.length-1);i++)
+      for (let j=i+1; j<comboList.length;j++)
+        if (comboList[i].isSequenceOf(comboList[j]))
+          return true
+
+    return false
   }
 }
