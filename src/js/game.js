@@ -1,15 +1,5 @@
-class Combo {
-  /**
-   * @param {string} type 
-   * @param {number} length 
-   * @param {{x:number, y:number}[]} positions 
-   */
-  constructor(type, length, positions) {
-    this.type = type
-    this.length = length
-    this.positions = positions
-  }
-}
+import Position from './models/position.js'
+import Combo from './models/combo.js'
 
 /**
  * @param {number} width Grid width, default = 10
@@ -65,26 +55,44 @@ export const createGameTable = (width = 10, height= 10) => {
     if (hasGap) updateGridValues()
   }
 
+  /**
+   * @param {Combo[]} comboList 
+   */
+  const reduceCombos = comboList => {
+    let reducedComboList = [...comboList]
+
+    for (let i=0; i<(comboList.length-1); i++)
+      for (let j=i+1; j<comboList.length; j++) 
+        if (comboList[j].isSequenceOf(comboList[i])) {
+          reducedComboList.push(Combo.reduceCombo(comboList[i], comboList[j]))
+          reducedComboList = reducedComboList.filter(a => ![comboList[i], comboList[j]].includes(a))
+        }
+
+    return reducedComboList
+  }
+
   const findCombos = grid => {
-    const combos = []
+    let combos = []
 
     for (let y=0;y<height; y++)
       for (let x=0; x<width-2; x++)
         if ((grid[y][x] == grid[y][x+1] && grid[y][x+1] == grid[y][x+2]) && grid[y][x] != -1)
           combos.push(new Combo('line', 3, [
-            {x,y, value: grid[y][x]},
-            {x: x+1,y, value: grid[y][x+1]},
-            {x: x+2,y, value: grid[y][x+2]}
+            new Position(x,y, grid[y][x]),
+            new Position(x+1,y, grid[y][x+1]),
+            new Position(x+2,y, grid[y][x+2])
           ]))
 
     for (let y=0;y<height-2; y++)
       for (let x=0; x<width; x++)
         if (((grid[y][x] == grid[y+1][x]) && (grid[y+1][x] == grid[y+2][x])) && grid[y][x] != -1)
           combos.push(new Combo('line', 3, [
-            {x,y, value: grid[y][x]},
-            {x,y: y+1, value: grid[y+1][x]},
-            {x,y: y+2, value: grid[y+2][x]}
+            new Position(x,y, grid[y][x]),
+            new Position(x,y+1, grid[y+1][x]),
+            new Position(x,y+2, grid[y+2][x])
           ]))
+
+    combos = reduceCombos(combos)
 
     console.log(`found ${combos.length} valid combos.`)
 
@@ -122,7 +130,7 @@ export const createGameTable = (width = 10, height= 10) => {
    */
   const handleMovement = movementInfos => {
     const { movement, target } = movementInfos
-    const { x, y, name } = movement
+    const { x, y, direction } = movement
     const row = Number(target.attributes.row.value)
     const col = Number(target.attributes.col.value)
 
@@ -130,7 +138,7 @@ export const createGameTable = (width = 10, height= 10) => {
 
     updateItemPosition(row, col, x, y)
 
-    console.log(`moving ${row}-${col} ${name}`)
+    console.log(`moving ${row}-${col} ${direction}`)
 
     notifyAll()
 
