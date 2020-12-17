@@ -4,11 +4,11 @@ import MovementInfo from './models/movement.js'
  * @param {string} animatedInterface the interface selector to animate
  * @param {number} animationThreshold default 400ms
  */
-export const getAnimationEngine = (animationThreshold = 400) => {
+export const getAnimationEngine = (animationThreshold = 250) => {
   console.log('animation engine started')
 
   const style = document.createElement('style')
-  style.innerText = `body {--animationDuration: ${animationThreshold}ms;}`
+  style.innerText = `body {--animationDuration: ${animationThreshold*2}ms;}`
   document.head.append(style)
   
   const observers = []
@@ -80,7 +80,7 @@ export const getAnimationEngine = (animationThreshold = 400) => {
 
     fireAnimation(target, movement)
 
-    setTimeout(() => removeAnimation(target, movement), animationThreshold)
+    setTimeout(() => removeAnimation(target, movement), animationThreshold*2)
   }
 
   return {

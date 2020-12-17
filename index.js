@@ -7,7 +7,7 @@ const game = createGameTable(10, 10)
 game.subscribe(renderGame)
 game.start()
 
-const animationEngine = getAnimationEngine(500)
+const animationEngine = getAnimationEngine(200)
 const touchHandler = startTouchSupport('#app')
 
 animationEngine.subscribe(game.handleMovement)

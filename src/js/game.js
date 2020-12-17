@@ -37,6 +37,7 @@ export const createGameTable = (width = 10, height= 10) => {
 
   const updateGridValues = () => {
     let hasGap = false;
+    
     for (let i=1; i<=height; i++) {
       const row = height-i
       for (let col=0; col<width; col++) {
@@ -53,6 +54,7 @@ export const createGameTable = (width = 10, height= 10) => {
         }
       }
     }
+
     if (hasGap) updateGridValues()
   }
 
@@ -150,7 +152,7 @@ export const createGameTable = (width = 10, height= 10) => {
     else {
       handleCombos()
 
-      setTimeout(notifyAll, animationThreshold/2)
+      setTimeout(notifyAll, animationThreshold)
     }
   }
 
