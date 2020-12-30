@@ -1,12 +1,13 @@
 import Position from './models/position.js'
 import Combo from './models/combo.js'
 import MovementInfo from './models/movement.js'
+import EmptySpace from './models/emptySpace.js'
 
 /**
  * @param {number} width Grid width, default = 10
  * @param {number} height Grid height, default = 10
  */
-export const createGameTable = (width = 10, height= 10) => {
+export const createGameTable = ({ width = 4, height = 4 }) => {
   const grid = [[0]]
   const observers = []
 
@@ -56,6 +57,28 @@ export const createGameTable = (width = 10, height= 10) => {
     }
 
     if (hasGap) updateGridValues()
+  }
+
+  const findEmptyColumns = () => {
+    const emptyColumns = []
+
+    for (let y = height-1; y>=0; y--) {
+      for (let x = 0; x<width; x++) {
+        if (grid[y][x] === -1) {
+          const position = new Position(x, y, -1)
+          let emptySpace = new EmptySpace(position, 0)
+
+          if (emptyColumns[x])
+            emptySpace = emptyColumns[x]
+
+          emptySpace.increaseHeight()
+
+          emptyColumns[x] = emptySpace
+        }
+      }
+    }
+
+    return emptyColumns
   }
 
   /**
@@ -116,6 +139,7 @@ export const createGameTable = (width = 10, height= 10) => {
     do {
       combos = findCombos(grid)
       removeCombos(combos)
+      console.log('empty columns', findEmptyColumns())
       updateGridValues()
     }while (combos.length)
   }

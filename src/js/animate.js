@@ -1,14 +1,17 @@
 import MovementInfo from './models/movement.js'
 
-/**
- * @param {string} animatedInterface the interface selector to animate
- * @param {number} animationThreshold default 400ms
- */
-export const getAnimationEngine = (animationThreshold = 250) => {
+export const getAnimationEngine = ({
+  width = 4,
+  height = 4,
+  animationDuration = 250,
+  animatedInterface
+}) => {
+  if (!animatedInterface) throw new Error('target interface of animation engine not declared')
+
   console.log('animation engine started')
 
   const style = document.createElement('style')
-  style.innerText = `body {--animationDuration: ${animationThreshold*2}ms;}`
+  style.innerText = `body {--animationDuration: ${animationDuration*2}ms;}`
   document.head.append(style)
   
   const observers = []
@@ -27,7 +30,7 @@ export const getAnimationEngine = (animationThreshold = 250) => {
     console.log(`notifying ${observers.length} observers about an animation start`)
 
     for (const observer of observers) {
-      observer(movement, target, animationThreshold)
+      observer(movement, target, animationDuration)
     }
   }
 
@@ -42,7 +45,7 @@ export const getAnimationEngine = (animationThreshold = 250) => {
 
     target.classList.add(`movement_${direction}`)
 
-    for (const gem of document.querySelectorAll('.gem')) {
+    for (const gem of document.querySelectorAll(animatedInterface)) {
       const oppositeDirection = MovementInfo.getOppositeDirection(direction)
       const gemRow = Number(gem.attributes.row.value)
       const gemCol = Number(gem.attributes.col.value)
@@ -62,7 +65,7 @@ export const getAnimationEngine = (animationThreshold = 250) => {
 
     target.classList.remove(`movement_${direction}`)
 
-    for (const gem of document.querySelectorAll('.gem')) {
+    for (const gem of document.querySelectorAll(animatedInterface)) {
       const oppositeDirection = MovementInfo.getOppositeDirection(direction)
       const gemRow = Number(gem.attributes.row.value)
       const gemCol = Number(gem.attributes.col.value)
@@ -80,7 +83,7 @@ export const getAnimationEngine = (animationThreshold = 250) => {
 
     fireAnimation(target, movement)
 
-    setTimeout(() => removeAnimation(target, movement), animationThreshold*2)
+    setTimeout(() => removeAnimation(target, movement), animationDuration*2)
   }
 
   return {
