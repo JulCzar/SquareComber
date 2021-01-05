@@ -6,7 +6,7 @@ export default class EmptySpace {
    * @param {number} height 
    */
   constructor(lowest, height) {
-    this.lowest = lowest
+    this.lowestItem = lowest
     this.height = height
   }
 

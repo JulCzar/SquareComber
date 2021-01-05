@@ -7,7 +7,7 @@ import EmptySpace from './models/emptySpace.js'
  * @param {number} width Grid width, default = 10
  * @param {number} height Grid height, default = 10
  */
-export const createGameTable = ({ width = 4, height = 4 }) => {
+export const createGameEnvironment = ({ width = 4, height = 4, animationDuration = 0 }) => {
   const grid = [[0]]
   const observers = []
 
@@ -20,43 +20,58 @@ export const createGameTable = ({ width = 4, height = 4 }) => {
 
   const notifyAll = () => {
     console.log(`notifying ${observers.length} observers about a grid change`)
-
+    
     for (const observer of observers)
-      observer([...grid])
+      observer(grid)
   }
 
+  const generateItem = () => Math.floor(Math.random() * 5)
+
   const createInitialGrid = () => {
-    for(let i=0; i < height; i++)
+    for(let i=0; i < height; i++) {
       grid[i] = []
+    }
   
-    for(let i=0; i < height; i++)
-      for(let j=0; j < width; j++)
-        grid[i][j] = Math.floor(Math.random() * 5)
+    for(let i=0; i < height; i++) {
+      for(let j=0; j < width; j++) {
+        grid[i][j] = generateItem() 
+      }
+    }
 
     notifyAll()
   }
 
-  const updateGridValues = () => {
-    let hasGap = false;
-    
-    for (let i=1; i<=height; i++) {
-      const row = height-i
-      for (let col=0; col<width; col++) {
-        if (row === 0) {
-          if(grid[row][col] == -1) {
-            grid[row][col] = Math.floor(Math.random() * 5)
-            hasGap = true
-          }
-        }else {
-          if(grid[row][col] == -1) {
-            grid[row][col] = grid[row-1][col]
-            grid[row-1][col] = -1
-          }
-        }
-      }
+  /**
+   * @param {EmptySpace[]} emptyColumns 
+   */
+  const updateGridValues = (emptyColumns = []) => {
+    const dropItemAbove = (x, y) => {
+      if (y - 1 < 0) return -1
+
+      const valueAbove = grid[y - 1][x]
+
+      const isAnEmptySquare = valueAbove === -1
+
+      if (isAnEmptySquare)
+        return dropItemAbove(x, y - 1)
+      
+      grid[y - 1][x] = dropItemAbove(x, y - 1)
+
+      return valueAbove
     }
 
-    if (hasGap) updateGridValues()
+    for (const emptySpace of emptyColumns) {
+      if (!emptySpace) continue
+git
+      const { height, lowestItem } = emptySpace
+      const { y, x } = lowestItem
+
+      for (let i=0; i<height; i++)
+        grid[y-i][x] = dropItemAbove(x, y-i)
+
+      // for (let i = 0; i < height; i++)
+        // grid[i][x] = generateItem()
+    }
   }
 
   const findEmptyColumns = () => {
@@ -135,13 +150,16 @@ export const createGameTable = ({ width = 4, height = 4 }) => {
   }
 
   const handleCombos = () => {
-    let combos = []
-    do {
-      combos = findCombos(grid)
-      removeCombos(combos)
-      console.log('empty columns', findEmptyColumns())
-      updateGridValues()
-    }while (combos.length)
+    const combos = findCombos(grid)
+    
+    if (!combos.length) return
+    
+    removeCombos(combos)
+    
+    const emptyColumns = findEmptyColumns()
+    updateGridValues(emptyColumns)
+
+    handleCombos()
   }
 
   const updateItemPosition = (row, col, x, y) => {
@@ -153,9 +171,8 @@ export const createGameTable = ({ width = 4, height = 4 }) => {
   /**
    * @param {MovementInfo} movement 
    * @param {HTMLElement} target
-   * @param {number} animationThreshold
    */
-  const handleMovement = (movement, target, animationThreshold) => {
+  const handleMovement = (movement, target) => {
     const { x, y, direction } = movement
     const row = Number(target.attributes.row.value)
     const col = Number(target.attributes.col.value)
@@ -174,9 +191,11 @@ export const createGameTable = ({ width = 4, height = 4 }) => {
       console.log('invalid move')
     }
     else {
-      handleCombos()
-
-      setTimeout(notifyAll, animationThreshold)
+      setTimeout(() => {
+        handleCombos(animationDuration)
+        
+        notifyAll()
+      }, animationDuration)
     }
   }
 

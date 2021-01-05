@@ -1,23 +1,26 @@
 import { getAnimationEngine } from './src/js/animate.js'
-import { createGameTable } from './src/js/game.js'
+import { createGameEnvironment } from './src/js/game.js'
 import { startTouchSupport } from './src/js/touch.js'
 import { createRenderEngine } from './src/js/view.js'
 
 const gameConfig = {
   width: 10,
   height: 10,
+  gridSize: 30,
   animationDuration: 200,
   renderInterface: '#app',
-  animatedInterface: '.gem'
+  animatedInterface: '.gem',
+  touchInterface: "#app"
 }
 
-const game = createGameTable(gameConfig)
+const game = createGameEnvironment(gameConfig)
 const renderEngine = createRenderEngine(gameConfig)
+const animationEngine = getAnimationEngine(gameConfig)
+
 game.subscribe(renderEngine.render)
 game.start()
 
-const animationEngine = getAnimationEngine(gameConfig)
-const touchHandler = startTouchSupport(gameConfig.renderInterface)
+const touchHandler = startTouchSupport(gameConfig.touchInterface)
 
 animationEngine.subscribe(game.handleMovement)
 touchHandler.subscribe(animationEngine.handleMovementAnimation)

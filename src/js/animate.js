@@ -3,18 +3,33 @@ import MovementInfo from './models/movement.js'
 export const getAnimationEngine = ({
   width = 4,
   height = 4,
+  gridSize,
   animationDuration = 250,
   animatedInterface
 }) => {
   if (!animatedInterface) throw new Error('target interface of animation engine not declared')
-
-  console.log('animation engine started')
-
-  const style = document.createElement('style')
-  style.innerText = `body {--animationDuration: ${animationDuration*2}ms;}`
-  document.head.append(style)
-  
   const observers = []
+
+  const generateDropAnimations = () => {
+    const dropCss = []
+
+    for (let i=height; i>0; i--) {
+      dropCss.push(`@keyframes drop-${i}-blocks { 0% { transform: translateY(-${i*gridSize}) }; 100% {} }`)
+      dropCss.push(` .drop-${i}-blocks { animation: drop-${i}-blocks; animation-duration: var(--animationDuration); }`)
+    }
+
+    return dropCss.join('')
+  }
+
+  const start = () => {
+    console.log('animation engine started')
+
+    const style = document.createElement('style')
+    style.innerText += `body {--animationDuration: ${animationDuration*2}ms;}`
+    style.innerText += generateDropAnimations()
+    document.head.append(style)
+    
+  }
 
   const subscribe = observer => {
     observers.push(observer)
@@ -30,7 +45,7 @@ export const getAnimationEngine = ({
     console.log(`notifying ${observers.length} observers about an animation start`)
 
     for (const observer of observers) {
-      observer(movement, target, animationDuration)
+      observer(movement, target)
     }
   }
 
@@ -85,6 +100,8 @@ export const getAnimationEngine = ({
 
     setTimeout(() => removeAnimation(target, movement), animationDuration*2)
   }
+
+  start()
 
   return {
     handleMovementAnimation,
