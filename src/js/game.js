@@ -1,12 +1,12 @@
-import Position from './models/position.js'
 import Combo from './models/combo.js'
+import Item from './models/item.js'
+import MovementInfo from './models/movement.js'
 
-/**
- * @param {number} width Grid width, default = 10
- * @param {number} height Grid height, default = 10
- */
-export const createGameTable = (width = 10, height= 10) => {
-  const grid = [[0]]
+const EMPTY_ITEM = new Item(-1, -1, 2, -1 )
+const REGISTERED_ITEMS_QUANTITY = 5
+
+export const createGameTable = ({ width = 4, height = 4, animationDuration }) => {
+  const grid = [[EMPTY_ITEM]]
   const observers = []
 
   /**
@@ -17,42 +17,67 @@ export const createGameTable = (width = 10, height= 10) => {
   }
 
   const notifyAll = () => {
+    const publicGrid = []
+
+    for (let i=0;i<height;i++) {
+      publicGrid[i] = []
+
+      for (let j=0;j<width;j++) {
+        publicGrid[i][j] = grid[i][j].value
+      }
+    }
+
     console.log(`notifying ${observers.length} observers about a grid change`)
 
-    for (const observer of observers)
-      observer([...grid])
+    for (const observer of observers) observer(publicGrid)
   }
 
   const createInitialGrid = () => {
-    for(let i=0; i < height; i++)
-      grid[i] = []
-  
-    for(let i=0; i < height; i++)
-      for(let j=0; j < width; j++)
-        grid[i][j] = Math.floor(Math.random() * 5)
+    for(let y=0; y<height; y++) {
+      grid[y] = [EMPTY_ITEM]
 
+      for(let x=0; x<width; x++)
+        grid[y][x] = new Item(x, y, REGISTERED_ITEMS_QUANTITY)
+    }
+    
     notifyAll()
   }
 
   const updateGridValues = () => {
-    let hasGap = false;
-    for (let i=1; i<=height; i++) {
-      const row = height-i
-      for (let col=0; col<width; col++) {
-        if (row === 0) {
-          if(grid[row][col] == -1) {
-            grid[row][col] = Math.floor(Math.random() * 5)
-            hasGap = true
-          }
-        }else {
-          if(grid[row][col] == -1) {
-            grid[row][col] = grid[row-1][col]
-            grid[row-1][col] = -1
-          }
+    /**
+     * @param {Item} item 
+     * @returns {number | null}
+     */
+    const dropValueAbove = item => {
+      const { x, y } = item.position
+
+      if (y === 0) return null
+
+      const itemAbove = grid[y-1][x]
+
+      if (itemAbove.isEmpty()) return dropValueAbove(itemAbove)
+      // if (itemAbove === EMPTY_ITEM) return null
+
+      return itemAbove.popValue()
+    }
+
+    for (const row of grid) {
+      for (const item of row) {
+        if (item.isEmpty()) {
+          const valueAbove = dropValueAbove(item)
+
+          item.value = valueAbove
         }
       }
     }
-    if (hasGap) updateGridValues()
+    
+    for (const row of grid) {
+      for (const item of row) {
+        if (item.isEmpty()) {
+          item.sortNewValue()
+        }
+      }
+    }
   }
 
   /**
@@ -71,28 +96,57 @@ export const createGameTable = (width = 10, height= 10) => {
     return reducedComboList
   }
 
-  const findCombos = grid => {
-    let combos = []
+  const findHorizontalCombos = () => {
+    const combos = []
 
-    for (let y=0;y<height; y++)
-      for (let x=0; x<width-2; x++)
-        if ((grid[y][x] == grid[y][x+1] && grid[y][x+1] == grid[y][x+2]) && grid[y][x] != -1)
-          combos.push(new Combo('line', 3, [
-            new Position(x,y, grid[y][x]),
-            new Position(x+1,y, grid[y][x+1]),
-            new Position(x+2,y, grid[y][x+2])
-          ]))
+    for (let y=0; y<height; y++) {
+      for (let x=0;x<width-2;x++) {
 
-    for (let y=0;y<height-2; y++)
-      for (let x=0; x<width; x++)
-        if (((grid[y][x] == grid[y+1][x]) && (grid[y+1][x] == grid[y+2][x])) && grid[y][x] != -1)
-          combos.push(new Combo('line', 3, [
-            new Position(x,y, grid[y][x]),
-            new Position(x,y+1, grid[y+1][x]),
-            new Position(x,y+2, grid[y+2][x])
-          ]))
+        const [item1, item2, item3] = [grid[y][x], grid[y][x+1], grid[y][x+2]]
 
-    combos = reduceCombos(combos)
+        const item1EqualsItem2 = item1.value === item2.value
+        const item2EqualsItem3 = item2.value === item3.value
+
+        const isACombo = item1EqualsItem2&&item2EqualsItem3 && !item1.isEmpty()
+
+        if (isACombo)
+          combos.push(new Combo('horizontal', 3, [item1, item2, item3]))
+      }
+    }
+
+    // const reducedCombos = reduceCombos(combos)
+
+    return combos
+  }
+
+  const findVerticalCombos = () => {
+    const combos = []
+
+    for (let y=0; y<height-2; y++) {
+      for (let x=0; x<width; x++) {
+        const [item1, item2, item3] = [grid[y][x], grid[y+1][x], grid[y+2][x]]
+
+        const item1EqualsItem2 = item1.value === item2.value
+        const item2EqualsItem3 = item2.value === item3.value
+
+        const isACombo = item1EqualsItem2 && item2EqualsItem3 && !item1.isEmpty()
+
+        const items = [item1, item2, item3]
+
+        if (isACombo) combos.push(new Combo('vertical', 3, items))
+      }
+    }
+
+    // const reducedCombos = reduceCombos(combos)
+
+    return combos
+  }
+
+  const findCombos = () => {
+    const horizontalCombos = findHorizontalCombos()
+    const verticalCombos = findVerticalCombos()
+
+    const combos = [...horizontalCombos, ...verticalCombos]
 
     console.log(`found ${combos.length} valid combos.`)
 
@@ -104,8 +158,8 @@ export const createGameTable = (width = 10, height= 10) => {
    */
   const removeCombos = comboList => {
     for (const combo of comboList)
-      for (const pos of combo.positions)
-        grid[pos.y][pos.x] = -1
+      for (const item of combo.items)
+        item.popValue()
         
     console.log(`removed ${comboList.length} combos from grid`)
   }
@@ -126,35 +180,33 @@ export const createGameTable = (width = 10, height= 10) => {
   }
 
   /**
-   * @param {{movement: {x: number, y: number}, target: HTMLElement}} movementInfos 
+   * @param {{movement: MovementInfo, target: HTMLElement}} movementInfos 
    */
-  const handleMovement = movementInfos => {
-    const { movement, target } = movementInfos
+  const handleMovement = ({ movement, target }) => {
     const { x, y, direction } = movement
     const row = Number(target.attributes.row.value)
     const col = Number(target.attributes.col.value)
 
-    if (row + y < 0 || col + x < 0 || col + x >= width || row + y >= height) return
+    const rowIsValid = row + y >= 0 && row + y <= height
+    const colIsValid = col + x >= 0 && col + x <= width
+
+    if (!rowIsValid || !colIsValid) return
 
     updateItemPosition(row, col, x, y)
 
     console.log(`moving ${row}-${col} ${direction}`)
 
-    notifyAll()
-
     const combos = findCombos(grid)
 
-    if (!combos.length) setTimeout(() => {
+    if (!combos.length)  {
       updateItemPosition(row, col, x, y)
 
       console.log('invalid move')
-
-      notifyAll()
-    }, 100)
+    }
     else {
       handleCombos()
 
-      notifyAll()
+      setTimeout(notifyAll, animationDuration)
     }
   }
 

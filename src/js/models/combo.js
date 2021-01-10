@@ -1,22 +1,22 @@
-import Position from './position.js'
+import Item from './item.js'
 
 export default class Combo {
   /**
    * @param {string} type 
    * @param {number} length 
-   * @param {Position[]} positions 
+   * @param {Item[]} items 
    */
-  constructor(type, length, positions) {
+  constructor(type, length, items) {
     this.type = type
     this.length = length
-    this.positions = positions
+    this.items = items
   }
 
   /**
    * @param {Combo} combo 
    */
   isSequenceOf(combo) {
-    for (const pos of this.positions)
+    for (const pos of this.items)
       for (const combo_pos of combo.positions)
         if (pos.equals(combo_pos))
           return true
