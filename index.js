@@ -5,7 +5,7 @@ import { renderGame } from './src/js/view.js'
 const gameConfig = {
   width: 10,
   height: 10,
-  animationDuration: 0,
+  animationDuration: 250,
   renderInterface: '#app',
   animatedInterface: '.gem'
 }

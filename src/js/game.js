@@ -17,15 +17,7 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
   }
 
   const notifyAll = () => {
-    const publicGrid = []
-
-    for (let i=0;i<height;i++) {
-      publicGrid[i] = []
-
-      for (let j=0;j<width;j++) {
-        publicGrid[i][j] = grid[i][j].value
-      }
-    }
+    const publicGrid = grid.map(row => row.map(i => i.value))
 
     console.log(`notifying ${observers.length} observers about a grid change`)
 
@@ -46,27 +38,25 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
   const updateGridValues = () => {
     /**
      * @param {Item} item 
-     * @returns {number | null}
+     * @returns {number}
      */
     const dropValueAbove = item => {
       const { x, y } = item.position
 
-      if (y === 0) return null
+      if (y<=0) return -1
 
       const itemAbove = grid[y-1][x]
 
-      if (itemAbove.isEmpty()) return dropValueAbove(itemAbove)
-      // if (itemAbove === EMPTY_ITEM) return null
+      if (itemAbove.isEmpty())
+        return dropValueAbove(itemAbove)
 
       return itemAbove.popValue()
     }
 
-    for (const row of grid) {
-      for (const item of row) {
+    for (let y=height-1; y>=0; y--) {
+      for (const item of grid[y]) {
         if (item.isEmpty()) {
-          const valueAbove = dropValueAbove(item)
-
-          item.value = valueAbove
+          item.value = dropValueAbove(item)
         }
       }
     }
@@ -83,18 +73,7 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
   /**
    * @param {Combo[]} comboList 
    */
-  const reduceCombos = comboList => {
-    let reducedComboList = [...comboList]
-
-    for (let i=0; i<(comboList.length-1); i++)
-      for (let j=i+1; j<comboList.length; j++) 
-        if (comboList[j].isSequenceOf(comboList[i])) {
-          reducedComboList.push(Combo.reduceCombo(comboList[i], comboList[j]))
-          reducedComboList = reducedComboList.filter(a => ![comboList[i], comboList[j]].includes(a))
-        }
-
-    return reducedComboList
-  }
+  const reduceComboList = comboList => {}
 
   const findHorizontalCombos = () => {
     const combos = []
@@ -148,8 +127,6 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
 
     const combos = [...horizontalCombos, ...verticalCombos]
 
-    console.log(`found ${combos.length} valid combos.`)
-
     return combos;
   }
 
@@ -168,6 +145,8 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
     let combos = []
     do {
       combos = findCombos(grid)
+      console.log(`found ${combos.length} valid combos.`)
+
       removeCombos(combos)
       updateGridValues()
     }while (combos.length)

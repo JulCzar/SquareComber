@@ -8,27 +8,28 @@ export default class Item {
    * @param {number} initialValue value to initialize the item
    */
   constructor (x, y, maxValue, initialValue) {
-    if (x === undefined || typeof x !== 'number') throw new Error('X position value not provided or provided an invalid one! valid => any number higher than 0')
-    if (y === undefined || typeof y !== 'number') throw new Error('Y position value not provided or provided an invalid one! valid => any number higher than 0')
+    if (x === undefined || typeof x !== 'number') throw new Error('X position value not provided or provided an invalid one! valid => any integer higher than -1')
+    if (y === undefined || typeof y !== 'number') throw new Error('Y position value not provided or provided an invalid one! valid => any integer higher than -1')
     if (!maxValue || typeof maxValue !== 'number') throw new Error('max value not provided or provided an invalid one! valid => any number higher than 0')
     
     this.value = initialValue || sortValue(maxValue)
     this.position =  { x, y }
-    
+
     this.sortNewValue = () => {
       this.value = sortValue(maxValue)
     }
   }
 
+  isEmpty() {
+    return this.value === -1
+  }
   getX() { return this.position.x }
   getY() { return this.position.y }
 
-  isEmpty() { return (typeof this.value !== 'number') }
-
   popValue() {
     const value = this.value
-    this.value = null
-
+    this.value = -1
+    
     return value
   }
 }
