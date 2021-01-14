@@ -10,6 +10,7 @@ export const renderGame = gameGrid => {
     acc += '<div class="row">'
 
     acc += item.map((value, j) => `<div draggable="false" row="${i}" col="${j}" class="gem far ${emojis[value] || ''}"></div>`).join('')
+    // acc += item.map((value, j) => `<div draggable="false" row="${i}" col="${j}" class="gem far">${value}</div>`).join('')
 
     return acc + '</div>'
   }, '<div class="table">') + '</div>'
