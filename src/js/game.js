@@ -125,30 +125,20 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
   const findHorizontalCombos = () => {
     const combos = []
 
-    for (const row of grid) {
-      const rowCombos = []
-      
-      for (let i=0;i<width-2;i++) {
-        if (!rowCombos.length && (row[i].value == row[i+1].value)) 
-          rowCombos.push(row[i], row[i+1])
+    for (let y=0; y<height; y++) {
+      for (let x=0;x<width-2;x++) {
 
-        if (rowCombos.length && row[i+1].value == row[i+2].value)
-          rowCombos.push(row[i+2])
+        const [item1, item2, item3] = [grid[y][x], grid[y][x+1], grid[y][x+2]]
+
+        const item1EqualsItem2 = item1.value === item2.value
+        const item2EqualsItem3 = item2.value === item3.value
+
+        const isACombo = item1EqualsItem2&&item2EqualsItem3 && !item1.isEmpty()
+
+        if (isACombo)
+          combos.push(new Combo('horizontal', 3, [item1, item2, item3]))
       }
     }
-    // for (let y=0; y<height; y++) {
-      // for (let x=0;x<width-2;x++) {
-        // const [item1, item2, item3] = [grid[y][x], grid[y][x+1], grid[y][x+2]]
-
-        // const item1EqualsItem2 = item1.value === item2.value
-        // const item2EqualsItem3 = item2.value === item3.value
-
-        // const isACombo = item1EqualsItem2&&item2EqualsItem3 && !item1.isEmpty()
-
-        // if (isACombo)
-        //   combos.push(new Combo('horizontal', 3, [item1, item2, item3]))
-    //   }
-    // }
 
     // const reducedCombos = reduceCombos(combos)
 
