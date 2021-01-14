@@ -7,6 +7,10 @@
   font-size: 100%;
 }
 
+body {
+  background: #1e1e2e
+}
+
 #app {
   align-items: center;
   display: flex;
@@ -42,11 +46,11 @@
 }
 
 .fa-grin-stars {
-  color: #f2f200;
+  color: #666654;
 }
 
 .fa-flushed {
-  color: orange;
+  color: pink;
 }
 
 .fa-grin-beam-sweat {

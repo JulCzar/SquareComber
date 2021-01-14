@@ -22,6 +22,8 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
     console.log(`notifying ${observers.length} observers about a grid change`)
 
     for (const observer of observers) observer(publicGrid)
+
+    updateGridValues()
   }
 
   const createInitialGrid = () => {
@@ -36,6 +38,21 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
   }
 
   const updateGridValues = () => {
+    function getItemAbove(x, y) {
+      for (let i=height-1; i>=0; i--) {
+        for (const item of grid[i]) {
+          const { position } = item
+
+          if (position.x !== x) continue
+          if (position.y !== y-1) continue
+
+          return item
+        }
+      }
+
+      return EMPTY_ITEM
+    }
+
     /**
      * @param {Item} item 
      * @returns {number}
@@ -45,29 +62,59 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
 
       if (y<=0) return -1
 
-      const itemAbove = grid[y-1][x]
+      const itemAbove = getItemAbove(x, y)
 
-      if (itemAbove.isEmpty())
-        return dropValueAbove(itemAbove)
+      if (itemAbove.isEmpty()) return dropValueAbove(itemAbove)
 
       return itemAbove.popValue()
     }
 
-    for (let y=height-1; y>=0; y--) {
-      for (const item of grid[y]) {
-        if (item.isEmpty()) {
-          item.value = dropValueAbove(item)
+    const update = () => {
+      for (let y=0; y<height;y++) {
+        for (let x=0; x<width;x++) {
+          if (!grid[y][x].isEmpty()) {
+            if (y+1>=height) continue
+  
+            if (grid[y+1][x].isEmpty()) {
+              grid[y+1][x].value = grid[y][x].popValue()
+            }
+          }
         }
       }
     }
-    
-    for (const row of grid) {
-      for (const item of row) {
-        if (item.isEmpty()) {
-          item.sortNewValue()
+
+    const verifyGrid = () => {
+      for (let y=0; y<height;y++) {
+        for (let x=0; x<width;x++) {
+          if (!grid[y][x].isEmpty()) {
+            if (y+1>=height) continue
+            if (grid[y+1][x].isEmpty()) {
+              return true
+            }
+          }
+        }
+      }
+      return false
+    }
+
+    const fillEmptyValues = () => {
+      for (const row of grid) {
+        for (const item of row) {
+          if (item.isEmpty()) {
+            item.sortNewValue()
+          }
         }
       }
     }
+
+    update()
+
+    const hasToBeRecursive = verifyGrid()
+
+    if (hasToBeRecursive)
+      updateGridValues()
+    else
+      fillEmptyValues()
   }
 
   /**
@@ -78,20 +125,30 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
   const findHorizontalCombos = () => {
     const combos = []
 
-    for (let y=0; y<height; y++) {
-      for (let x=0;x<width-2;x++) {
+    for (const row of grid) {
+      const rowCombos = []
+      
+      for (let i=0;i<width-2;i++) {
+        if (!rowCombos.length && (row[i].value == row[i+1].value)) 
+          rowCombos.push(row[i], row[i+1])
 
-        const [item1, item2, item3] = [grid[y][x], grid[y][x+1], grid[y][x+2]]
-
-        const item1EqualsItem2 = item1.value === item2.value
-        const item2EqualsItem3 = item2.value === item3.value
-
-        const isACombo = item1EqualsItem2&&item2EqualsItem3 && !item1.isEmpty()
-
-        if (isACombo)
-          combos.push(new Combo('horizontal', 3, [item1, item2, item3]))
+        if (rowCombos.length && row[i+1].value == row[i+2].value)
+          rowCombos.push(row[i+2])
       }
     }
+    // for (let y=0; y<height; y++) {
+      // for (let x=0;x<width-2;x++) {
+        // const [item1, item2, item3] = [grid[y][x], grid[y][x+1], grid[y][x+2]]
+
+        // const item1EqualsItem2 = item1.value === item2.value
+        // const item2EqualsItem3 = item2.value === item3.value
+
+        // const isACombo = item1EqualsItem2&&item2EqualsItem3 && !item1.isEmpty()
+
+        // if (isACombo)
+        //   combos.push(new Combo('horizontal', 3, [item1, item2, item3]))
+    //   }
+    // }
 
     // const reducedCombos = reduceCombos(combos)
 
@@ -127,6 +184,8 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
 
     const combos = [...horizontalCombos, ...verticalCombos]
 
+    console.log(combos)
+
     return combos;
   }
 
@@ -147,13 +206,17 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
       combos = findCombos(grid)
       console.log(`found ${combos.length} valid combos.`)
 
-      removeCombos(combos)
+      if (combos.length) removeCombos(combos)
       updateGridValues()
     }while (combos.length)
   }
 
   const updateItemPosition = (row, col, x, y) => {
     const aux = grid[row][col]
+    const sideItem = grid[row+y][col+x]
+    
+    if (aux.isEmpty() || sideItem.isEmpty()) return
+
     grid[row][col] = grid[row+y][col+x]
     grid[row+y][col+x] = aux
   }
@@ -184,9 +247,11 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
     }
     else {
       handleCombos()
-
+      
       setTimeout(notifyAll, animationDuration)
     }
+
+    updateGridValues()
   }
 
   /**
