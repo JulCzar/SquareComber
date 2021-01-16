@@ -27,7 +27,7 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
     console.log(`notifying ${observers.length} observer about a touch event`)
 
     for (const observer of observers)
-      observer(movement, target)
+      observer({movement, target})
   }
   
   /**

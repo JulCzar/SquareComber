@@ -45,7 +45,7 @@ export const getAnimationEngine = ({
     console.log(`notifying ${observers.length} observers about an animation start`)
 
     for (const observer of observers) {
-      observer(movement, target)
+      observer({movement, target})
     }
   }
 
@@ -93,7 +93,7 @@ export const getAnimationEngine = ({
    * @param {MovementInfo} movement 
    * @param {HTMLElement} target
    */
-  const handleMovementAnimation = (movement, target) => {
+  const handleMovementAnimation = ({movement, target}) => {
     notifyAll(movement, target)
 
     fireAnimation(target, movement)

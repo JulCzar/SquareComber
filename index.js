@@ -6,7 +6,6 @@ import { createRenderEngine } from './src/js/view.js'
 const gameConfig = {
   width: 10,
   height: 10,
-  gridSize: 30,
   animationDuration: 200,
   renderInterface: '#app',
   animatedInterface: '.gem',
@@ -16,11 +15,10 @@ const gameConfig = {
 const game = createGameEnvironment(gameConfig)
 const renderEngine = createRenderEngine(gameConfig)
 const animationEngine = getAnimationEngine(gameConfig)
+const touchHandler = startTouchSupport(gameConfig.touchInterface)
 
 game.subscribe(renderEngine.render)
 game.start()
-
-const touchHandler = startTouchSupport(gameConfig.touchInterface)
 
 animationEngine.subscribe(game.handleMovement)
 touchHandler.subscribe(animationEngine.handleMovementAnimation)

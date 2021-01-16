@@ -13,6 +13,10 @@ body {
   background: #1e1e2e
 }
 
+body {
+  background: #1e1e2e
+}
+
 #app {
   align-items: center;
   display: flex;
@@ -47,11 +51,11 @@ body {
 }
 
 .fa-grin-stars {
-  color: #f2f200;
+  color: #666654;
 }
 
 .fa-flushed {
-  color: orange;
+  color: pink;
 }
 
 .fa-grin-beam-sweat {
