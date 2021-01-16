@@ -174,8 +174,6 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
 
     const combos = [...horizontalCombos, ...verticalCombos]
 
-    console.log(combos)
-
     return combos;
   }
 
@@ -183,22 +181,25 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
    * @param {Combo[]} comboList 
    */
   const removeCombos = comboList => {
+    if (!comboList.length) return
+
     for (const combo of comboList)
       for (const item of combo.items)
         item.popValue()
-        
+
     console.log(`removed ${comboList.length} combos from grid`)
   }
 
   const handleCombos = () => {
-    let combos = []
-    do {
-      combos = findCombos(grid)
-      console.log(`found ${combos.length} valid combos.`)
+    const combos = findCombos(grid)
 
-      if (combos.length) removeCombos(combos)
-      updateGridValues()
-    }while (combos.length)
+    console.log(`found ${combos.length} valid combos.`)
+
+    removeCombos(combos)
+
+    updateGridValues()
+
+    if (combos.length) handleCombos()
   }
 
   const updateItemPosition = (row, col, x, y) => {
@@ -237,7 +238,7 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
     }
     else {
       handleCombos()
-      
+
       setTimeout(notifyAll, animationDuration)
     }
 
