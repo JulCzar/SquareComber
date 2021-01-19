@@ -1,21 +1,22 @@
 import MovementInfo from './models/movement.js'
 
-export const getAnimationEngine = ({
-  width = 4,
+export const createRenderEngine = ({
+  renderInterface,
   height = 4,
   gridSize,
   animationDuration = 250,
   animatedInterface
 }) => {
   if (!animatedInterface) throw new Error('target interface of animation engine not declared')
+  const app = document.querySelector(renderInterface)
   const observers = []
 
-  const generateDropAnimations = () => {
+  const generateFallingAnimations = () => {
     const dropCss = []
 
     for (let i=height; i>0; i--) {
-      dropCss.push(`@keyframes drop-${i}-blocks { 0% { transform: translateY(-${i*gridSize}) }; 100% {} }`)
-      dropCss.push(` .drop-${i}-blocks { animation: drop-${i}-blocks; animation-duration: var(--animationDuration); }`)
+      dropCss.push(`@keyframes falling-${i}-blocks { 0% { transform: translateY(-${i*gridSize}) }; 100% {} }`)
+      dropCss.push(` .fall-${i}-blocks { animation: falling-${i}-blocks; animation-duration: var(--animationDuration); }`)
     }
 
     return dropCss.join('')
@@ -26,7 +27,7 @@ export const getAnimationEngine = ({
 
     const style = document.createElement('style')
     style.innerText += `body {--animationDuration: ${animationDuration*2}ms;}`
-    style.innerText += generateDropAnimations()
+    style.innerText += generateFallingAnimations()
     document.head.append(style)
     
   }
@@ -44,9 +45,7 @@ export const getAnimationEngine = ({
   const notifyAll = (movement, target) => {
     console.log(`notifying ${observers.length} observers about an animation start`)
 
-    for (const observer of observers) {
-      observer({movement, target})
-    }
+    observers.forEach(observer => observer({movement, target}))
   }
 
   /**
@@ -69,6 +68,7 @@ export const getAnimationEngine = ({
         gem.classList.add(`movement_${oppositeDirection}`)
     }
   }
+  
   /**
    * @param {HTMLElement} target 
    * @param {MovementInfo} movement 
@@ -89,22 +89,40 @@ export const getAnimationEngine = ({
         gem.classList.remove(`movement_${oppositeDirection}`)
     }
   }
+
   /**
    * @param {MovementInfo} movement 
    * @param {HTMLElement} target
    */
-  const handleMovementAnimation = ({movement, target}) => {
+  const triggerSwapAnimation = ({movement, target}) => {
     notifyAll(movement, target)
 
     fireAnimation(target, movement)
 
     setTimeout(() => removeAnimation(target, movement), animationDuration*2)
   }
+  
+  /**
+   * @param {number[][]} gameGrid 
+   */
+  const render = (gameGrid, changes) => {
+    console.log('grid changes', changes)
+    const emojis = ['fa-grin-tongue', 'fa-grin-hearts', 'fa-grin-stars', 'fa-grin-beam-sweat', 'fa-flushed']
+
+    app.innerHTML = gameGrid.reduce((acc, item, i) => {
+      acc += '<div class="row">'
+
+    acc += item.map((value, j) => `<div draggable="false" row="${i}" col="${j}" class="gem far ${emojis[value] || ''}"></div>`).join('')
+
+      return acc + '</div>'
+    }, '<div class="table">') + '</div>'
+  }
 
   start()
 
   return {
-    handleMovementAnimation,
+    render,
+    triggerSwapAnimation,
     subscribe
   }
 }
