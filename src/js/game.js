@@ -1,6 +1,5 @@
 import Combo from './models/combo.js'
 import Item from './models/item.js'
-import ItemFalling from './models/itemFalling.js'
 import MovementInfo from './models/movement.js'
 
 const EMPTY_ITEM = new Item(-1, -1, 2, -1)
@@ -17,14 +16,13 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
     observers.push(observer)
   }
 
-  const notifyAll = gridChanges => {
+  const notifyAll = () => {
     const publicGrid = grid.map(row => row.map(i => i.value))
+    const gridChanges = grid.map(row => row.map(i => i.getFallCount()))
 
     console.log(`notifying ${observers.length} observers about a grid change`)
 
     for (const observer of observers) observer(publicGrid, gridChanges)
-
-    updateGridValues()
   }
 
   const createInitialGrid = () => {
@@ -72,12 +70,19 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
 
     const dropValuesOnce = () => {
       for (let y=0; y<height;y++) {
+        const row = grid[y]
+        const rowBellow = grid[y+1] || []
+
         for (let x=0; x<width;x++) {
-          if (!grid[y][x].isEmpty()) {
+          const currentItem = row[x]
+          const itemBellow = rowBellow[x]
+
+          if (!currentItem.isEmpty()) {
             if (y+1>=height) continue
-  
-            if (grid[y+1][x].isEmpty()) {
-              grid[y+1][x].value = grid[y][x].popValue()
+
+            if (itemBellow.isEmpty()) {
+              itemBellow.fall()
+              itemBellow.value = currentItem.popValue()
             }
           }
         }
@@ -86,12 +91,17 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
 
     const verifyGrid = () => {
       for (let y=0; y<height;y++) {
+        const row = grid[y]
+        const rowBellow = grid[y+1] || []
+
         for (let x=0; x<width;x++) {
-          if (!grid[y][x].isEmpty()) {
+          const currentItem = row[x]
+          const itemBellow = rowBellow[x]
+
+          if (!currentItem.isEmpty()) {
             if (y+1>=height) continue
-            if (grid[y+1][x].isEmpty()) {
-              return true
-            }
+
+            if (itemBellow.isEmpty()) return true
           }
         }
       }
@@ -102,6 +112,7 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
       for (const row of grid) {
         for (const item of row) {
           if (item.isEmpty()) {
+            item.fall()
             item.sortNewValue()
           }
         }
@@ -176,40 +187,6 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
     return combos;
   }
 
-  const countFallingItems = () => {
-    /**
-     * @param {Item} item 
-     */
-    const hasEmptyItemsBellow = item => {
-      const { x, y } = item.position
-
-      if (y === height-1) return false
-
-      const itemBellow = grid[y+1][x]
-
-      if (itemBellow.isEmpty()) return true
-      else return hasEmptyItemsBellow(itemBellow)
-    }
-
-    const countEmptyItemsBellow = () => {
-
-    }
-
-    const fallingItems = []
-
-    for (const row of grid) {
-      for (const item of row) {
-        if (hasEmptyItemsBellow(item)) {
-          const { x, y } = item.position
-
-          const fallingItem = new ItemFalling(x, y, countEmptyItemsBellow(item))  
-
-          fallingItems.push(fallingItem)
-        }
-      }
-    }
-  }
-
   /**
    * @param {Combo[]} comboList 
    */
@@ -234,6 +211,8 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
 
     removeCombos(combos)
 
+    // countFallingItems()
+    
     updateGridValues()
 
     if (combos.length) {

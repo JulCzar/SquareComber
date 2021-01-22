@@ -2,6 +2,7 @@ import MovementInfo from './models/movement.js'
 
 export const createRenderEngine = ({
   renderInterface,
+  width = 4,
   height = 4,
   gridSize,
   animationDuration = 250,
@@ -15,8 +16,8 @@ export const createRenderEngine = ({
     const dropCss = []
 
     for (let i=height; i>0; i--) {
-      dropCss.push(`@keyframes falling-${i}-blocks { 0% { transform: translateY(-${i*gridSize}) }; 100% {} }`)
-      dropCss.push(` .fall-${i}-blocks { animation: falling-${i}-blocks; animation-duration: var(--animationDuration); }`)
+      dropCss.push(`@keyframes falling-${i}-blocks { 0% { transform: translateY(-${i*gridSize}px) }; 100% {} }`)
+      dropCss.push(` .fall-${i}-blocks { animation: falling-${i}-blocks; animation-duration: calc(var(--animationDuration)/2); }`)
     }
 
     return dropCss.join('')
@@ -26,7 +27,7 @@ export const createRenderEngine = ({
     console.log('animation engine started')
 
     const style = document.createElement('style')
-    style.innerText += `body {--animationDuration: ${animationDuration*2}ms;}`
+    style.innerText += `body { --animationDuration: ${animationDuration*2}ms; --gridSize: ${gridSize}px; }`
     style.innerText += generateFallingAnimations()
     document.head.append(style)
     
@@ -106,16 +107,24 @@ export const createRenderEngine = ({
    * @param {number[][]} gameGrid 
    */
   const render = (gameGrid, changes) => {
-    console.log('grid changes', changes)
     const emojis = ['fa-grin-tongue', 'fa-grin-hearts', 'fa-grin-stars', 'fa-grin-beam-sweat', 'fa-flushed']
 
-    app.innerHTML = gameGrid.reduce((acc, item, i) => {
-      acc += '<div class="row">'
+    const gameGridHTML = ['<div class="table">']
+    
+    for (let y=0; y<width; y++) {
+      gameGridHTML.push('<div class="row">')
+      
+      for (let x=0; x<height; x++) {
+        const value = gameGrid[y][x]
+        const fall = changes[y][x]?`fall-${changes[y][x]}-blocks`:''
+        gameGridHTML.push(`<div draggable="false" row="${y}" col="${x}" class="gem far ${emojis[value] || ''} ${fall}"></div>`)
+      }
 
-    acc += item.map((value, j) => `<div draggable="false" row="${i}" col="${j}" class="gem far ${emojis[value] || ''}"></div>`).join('')
+      gameGridHTML.push('</div>')
+    }
+    gameGridHTML.push('</div>')
 
-      return acc + '</div>'
-    }, '<div class="table">') + '</div>'
+    app.innerHTML = gameGridHTML.join('')
   }
 
   start()
