@@ -12,9 +12,6 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
     initialY: NaN
   }
 
-  /**
-   * @param {(movementInfos: state) => void} observer 
-   */
   const subscribe = observer => {
     observers.push(observer)
   }

@@ -9,4 +9,17 @@ export default class MovementInfo {
     this.y = y
     this.direction = direction
   }
+
+  /**
+   * @param {'up' | 'down' | 'left' | 'right'} direction
+   * @returns {'up' | 'down' | 'left' | 'right'}
+   */
+  static getOppositeDirection(direction) {
+    return {
+      up: 'down',
+      right: 'left',
+      down: 'up',
+      left: 'right'
+    }[direction]
+  }
 }

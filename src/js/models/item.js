@@ -14,6 +14,7 @@ export default class Item {
     
     this.value = initialValue || sortValue(maxValue)
     this.position =  { x, y }
+    this.fall = 0;
 
     this.sortNewValue = () => {
       this.value = sortValue(maxValue)
@@ -29,6 +30,21 @@ export default class Item {
   popValue() {
     const value = this.value
     this.value = -1
+    
+    return value
+  }
+
+  increaseFall() {
+    this.fall++
+  }
+
+  setFall(value) {
+    this.fall = value
+  }
+
+  getFallCount() {
+    const value = this.fall
+    this.fall = 0
     
     return value
   }

@@ -1,18 +1,23 @@
-import { createGameTable } from './src/js/game.js'
+import { createGameEnvironment } from './src/js/game.js'
 import { startTouchSupport } from './src/js/touch.js'
-import { renderGame } from './src/js/view.js'
+import { createRenderEngine } from './src/js/renderEngine.js'
 
 const gameConfig = {
   width: 10,
   height: 10,
-  animationDuration: 0,
+  gridSize: 30,
+  animationDuration: 500,
   renderInterface: '#app',
-  animatedInterface: '.gem'
+  animatedInterface: '.gem',
+  touchInterface: "#app"
 }
 
-const game = createGameTable(gameConfig)
-game.subscribe(renderGame)
+const game = createGameEnvironment(gameConfig)
+const view = createRenderEngine(gameConfig)
+const touchHandler = startTouchSupport(gameConfig.touchInterface)
+
+game.subscribe(view.render)
 game.start()
 
-const touchHandler = startTouchSupport('#app')
-touchHandler.subscribe(game.handleMovement)
+view.subscribe(game.handleMovement)
+touchHandler.subscribe(view.triggerSwapAnimation)

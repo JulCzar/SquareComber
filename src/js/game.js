@@ -2,15 +2,15 @@ import Combo from './models/combo.js'
 import Item from './models/item.js'
 import MovementInfo from './models/movement.js'
 
-const EMPTY_ITEM = new Item(-1, -1, 2, -1 )
+const EMPTY_ITEM = new Item(-1, -1, 2, -1)
 const REGISTERED_ITEMS_QUANTITY = 5
 
-export const createGameTable = ({ width = 4, height = 4, animationDuration }) => {
+export const createGameEnvironment = ({ width = 4, height = 4, animationDuration }) => {
   const grid = [[EMPTY_ITEM]]
   const observers = []
 
   /**
-   * @param {(gridData: grid) => void} observer 
+   * @param {(gridData: number[][], gridChanges:number[][]) => void} observer 
    */
   const subscribe = observer => {
     observers.push(observer)
@@ -18,13 +18,45 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
 
   const notifyAll = () => {
     const publicGrid = grid.map(row => row.map(i => i.value))
+    const gridChanges = grid.map(row => row.map(i => i.getFallCount()))
 
-    console.log(`notifying ${observers.length} observers about a grid change`)
+    console.log(`notifying ${observers.length} observers about a grid change`, gridChanges)
 
-    for (const observer of observers) observer(publicGrid)
-
-    updateGridValues()
+    for (const observer of observers) observer(publicGrid, gridChanges)
   }
+
+  /**
+   * @param {number} yIncrement 
+   * @param {number} xIncrement 
+   */
+  const createGetItem = (yIncrement, xIncrement) => {
+    /**
+     * @param {Item} item 
+     */
+    const func = item => {
+      const { x, y } = item.position
+
+      for (const row of grid) {
+        for (const item of row) {
+          const { position } = item
+
+          if (position.x !== x+xIncrement) continue
+          if (position.y !== y+yIncrement) continue
+
+          return item
+        }
+      }
+
+      return EMPTY_ITEM
+    }
+    
+    return func
+  }
+
+  const getItemAbove = createGetItem(-1, 0)
+  const getItemBellow = createGetItem(+1, 0)
+  const getItemRight = createGetItem(0, +1)
+  const getItemLeft = createGetItem(0, -1)
 
   const createInitialGrid = () => {
     for(let y=0; y<height; y++) {
@@ -38,59 +70,38 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
   }
 
   const updateGridValues = () => {
-    function getItemAbove(x, y) {
-      for (let i=height-1; i>=0; i--) {
-        for (const item of grid[i]) {
-          const { position } = item
+    const dropValuesOnce = () => {
+      const reverseGrid = [...grid].reverse()
 
-          if (position.x !== x) continue
-          if (position.y !== y-1) continue
+      for (let y=0;y<height;y++) {
+        const row = reverseGrid[y]
+        const rowAbove = reverseGrid[y+1] || []
 
-          return item
-        }
-      }
+        for (let x=0; x<width; x++) {
+          const item = row[x]
+          const itemAbove = rowAbove[x] || EMPTY_ITEM
 
-      return EMPTY_ITEM
-    }
-
-    /**
-     * @param {Item} item 
-     * @returns {number}
-     */
-    const dropValueAbove = item => {
-      const { x, y } = item.position
-
-      if (y<=0) return -1
-
-      const itemAbove = getItemAbove(x, y)
-
-      if (itemAbove.isEmpty()) return dropValueAbove(itemAbove)
-
-      return itemAbove.popValue()
-    }
-
-    const update = () => {
-      for (let y=0; y<height;y++) {
-        for (let x=0; x<width;x++) {
-          if (!grid[y][x].isEmpty()) {
-            if (y+1>=height) continue
-  
-            if (grid[y+1][x].isEmpty()) {
-              grid[y+1][x].value = grid[y][x].popValue()
-            }
+          if (item.isEmpty()) {
+            item.value = itemAbove.popValue()
+            item.increaseFall()
           }
         }
       }
     }
 
-    const verifyGrid = () => {
+    const hasFloatingItems = () => {
       for (let y=0; y<height;y++) {
+        const row = grid[y]
+        const rowBellow = grid[y+1] || []
+
         for (let x=0; x<width;x++) {
-          if (!grid[y][x].isEmpty()) {
+          const currentItem = row[x]
+          const itemBellow = rowBellow[x]
+
+          if (!currentItem.isEmpty()) {
             if (y+1>=height) continue
-            if (grid[y+1][x].isEmpty()) {
-              return true
-            }
+
+            if (itemBellow.isEmpty()) return true
           }
         }
       }
@@ -107,14 +118,9 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
       }
     }
 
-    update()
+    while (hasFloatingItems()) dropValuesOnce()
 
-    const hasToBeRecursive = verifyGrid()
-
-    if (hasToBeRecursive)
-      updateGridValues()
-    else
-      fillEmptyValues()
+    fillEmptyValues()
   }
 
   /**
@@ -190,16 +196,31 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
     console.log(`removed ${comboList.length} combos from grid`)
   }
 
-  const handleCombos = () => {
+  /**
+   * 
+   * @param {*} animDuration 
+   */
+  const handleCombos = (animDuration = animationDuration) => {
     const combos = findCombos(grid)
 
     console.log(`found ${combos.length} valid combos.`)
 
     removeCombos(combos)
-
+    
     updateGridValues()
+    
+    if (combos.length) {
+      if (animDuration) {setTimeout(() => {
+        notifyAll()
 
-    if (combos.length) handleCombos()
+        handleCombos(animDuration)
+      }, animDuration)
+      }else {
+        notifyAll()
+
+        handleCombos(0)
+      }
+    }
   }
 
   const updateItemPosition = (row, col, x, y) => {
@@ -236,11 +257,7 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
 
       console.log('invalid move')
     }
-    else {
-      handleCombos()
-
-      setTimeout(notifyAll, animationDuration)
-    }
+    else handleCombos()
 
     updateGridValues()
   }
@@ -251,7 +268,7 @@ export const createGameTable = ({ width = 4, height = 4, animationDuration }) =>
   const start = () => {
     createInitialGrid()
 
-    handleCombos()
+    handleCombos(0)
     
     notifyAll()
   }
