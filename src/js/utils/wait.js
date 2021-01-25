@@ -11,11 +11,11 @@ export const wait = ms => new Promise((resolve, reject) => {
 
 /**
  * Run an callback after some time 
- * @param {() => {}} callback function that will be executed after the delay
+ * @param {function} callback function that will be executed after the delay
  * @param {number} ms delay in milliseconds
  */
-export const doAfter = async (callback, ms) => {
+export const doAfter = async (callback, ms = 0, ...params) => {
   await wait(ms)
 
-  callback()
+  callback(...params)
 }
