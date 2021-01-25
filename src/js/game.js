@@ -118,7 +118,9 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
       }
     }
 
-    while (hasFloatingItems()) dropValuesOnce()
+    do {
+      dropValuesOnce()
+    }while (hasFloatingItems())
 
     fillEmptyValues()
   }
