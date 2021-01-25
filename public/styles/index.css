@@ -21,16 +21,18 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  height: 100vh;
 }
 
 .table {
   display: grid;
-  grid-template-rows: repeat(10, 1fr);
+  grid-template-rows: repeat(var(--gridHeight), 1fr);
+  overflow: hidden;
 }
 
 .row {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
+  grid-template-columns: repeat(var(--gridWidth), 1fr);
 }
 
 .gem {

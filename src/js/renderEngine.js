@@ -29,7 +29,7 @@ export const createRenderEngine = ({
     console.log('animation engine started')
 
     const style = document.createElement('style')
-    style.innerText += `body { --animationDuration: ${animationDuration*2}ms; --gridSize: ${gridSize}px; } #block { z-index: 9999;cursor: not-allowed;width: 100%;height: 100%;position: absolute; }`
+    style.innerText += `body { --animationDuration: ${animationDuration*2}ms; --gridSize: ${gridSize}px; --gridWidth: ${width}; --gridHeight: ${height} } #block { z-index: 9999;cursor: not-allowed;width: 100%;height: 100%;position: absolute; }`
     style.innerText += generateFallingAnimations()
     document.head.append(style)
     
@@ -120,13 +120,13 @@ export const createRenderEngine = ({
 
     const gameGridHTML = ['<div class="table">']
     
-    for (let y=0; y<width; y++) {
+    for (let y=0; y<height; y++) {
       gameGridHTML.push('<div class="row">')
       
-      for (let x=0; x<height; x++) {
+      for (let x=0; x<width; x++) {
         const value = gameGrid[y][x]
         const fall = changes[y][x]?`fall-${changes[y][x]}-blocks`:''
-        gameGridHTML.push(`<div draggable="false" row="${y}" col="${x}" class="gem far ${getEmoji(value)} ${fall}"></div>`)
+        gameGridHTML.push(`<div draggable="false" row="${y}" col="${x}" class="gem far fa-2x ${getEmoji(value)} ${fall}"></div>`)
       }
 
       gameGridHTML.push('</div>')
