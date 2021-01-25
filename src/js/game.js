@@ -205,8 +205,16 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
     }
   }
 
-  const updateItemPosition = (row, col, x, y) => {
-    if (row <= 0 || row+y>=height || col<=0 || col+x>=width) return
+  const updateItemPosition = (row, col, { x, y, direction }) => {
+    const isMovingOutsideGrid = () => {
+      const isMovingFirstRowUp = row===0 && direction === 'up'
+      const isMovingLastRowDown = row===height-1 && direction === 'down'
+      const isMovingFirstColumnLeft = col===0 && direction === 'left'
+      const isMovingLastColRight = col===height-1 && direction === 'right'
+
+      return isMovingFirstRowUp || isMovingLastRowDown || isMovingFirstColumnLeft || isMovingLastColRight
+    }
+    if (isMovingOutsideGrid()) return
 
     const aux = grid[row][col]
     const sideItem = grid[row+y][col+x]
@@ -234,7 +242,7 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
 
     if (!rowIsValid || !colIsValid) return unlockExternalGridChanges()
 
-    updateItemPosition(row, col, x, y)
+    updateItemPosition(row, col, movement)
 
     console.log(`moving ${row}-${col} ${direction}`)
 
