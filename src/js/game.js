@@ -206,10 +206,12 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
   }
 
   const updateItemPosition = (row, col, x, y) => {
+    if (row+y <= 0 || row+y>=height || col+x<=0 || col+x>=width) return
+
     const aux = grid[row][col]
     const sideItem = grid[row+y][col+x]
     
-    if (aux.isEmpty() || sideItem.isEmpty()) return
+    if (!aux || !sideItem || aux.isEmpty() || sideItem.isEmpty()) return
 
     grid[row][col] = grid[row+y][col+x]
     grid[row+y][col+x] = aux
@@ -230,7 +232,7 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
     const rowIsValid = row + y >= 0 && row + y <= height
     const colIsValid = col + x >= 0 && col + x <= width
 
-    if (!rowIsValid || !colIsValid) return
+    if (!rowIsValid || !colIsValid) return unlockExternalGridChanges()
 
     updateItemPosition(row, col, x, y)
 

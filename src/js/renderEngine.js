@@ -61,6 +61,8 @@ export const createRenderEngine = ({
     const row = Number(target.attributes.row.value)
     const col = Number(target.attributes.col.value)
 
+    if (row+y<=0||col+x<=0||col+x>=height||row+y>=width) return
+
     target.classList.add(`movement_${direction}`)
 
     for (const gem of document.querySelectorAll(animatedInterface)) {
