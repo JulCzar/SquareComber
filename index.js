@@ -5,7 +5,7 @@ import { createRenderEngine } from './src/js/renderEngine.js'
 const gameConfig = {
   width: 10,
   height: 10,
-  gridSize: 60,
+  gridSize: 30,
   animationDuration: 500,
   renderInterface: '#app',
   animatedInterface: '.gem',

@@ -1,4 +1,5 @@
 import MovementInfo from './models/movement.js'
+import { doAfter } from './utils/wait.js'
 
 export const createRenderEngine = ({
   renderInterface,
@@ -10,7 +11,7 @@ export const createRenderEngine = ({
 }) => {
   if (!animatedInterface) throw new Error('target interface of animation engine not declared')
   const renderObject = document.querySelector(renderInterface)
-  const knownAnimations = []
+  const knownAnimations = ['movement_down', 'movement_up','movement_left','movement_right']
   const observers = []
   
   const generateFallingAnimations = () => {
@@ -71,27 +72,6 @@ export const createRenderEngine = ({
         gem.classList.add(`movement_${oppositeDirection}`)
     }
   }
-  
-  /**
-   * @param {HTMLElement} target 
-   * @param {MovementInfo} movement 
-   */
-  const removeAnimation = (target, movement) => {
-    const { x, y, direction } = movement
-    const row = Number(target.attributes.row.value)
-    const col = Number(target.attributes.col.value)
-
-    target.classList.remove(`movement_${direction}`)
-
-    for (const gem of document.querySelectorAll(animatedInterface)) {
-      const oppositeDirection = MovementInfo.getOppositeDirection(direction)
-      const gemRow = Number(gem.attributes.row.value)
-      const gemCol = Number(gem.attributes.col.value)
-
-      if (gemRow == (row + y) && gemCol == (col + x))
-        gem.classList.remove(`movement_${oppositeDirection}`)
-    }
-  }
 
   const clearAllAnimations = () => {
     const itemsToAnimate = document.querySelectorAll(animatedInterface)
@@ -109,7 +89,7 @@ export const createRenderEngine = ({
 
     fireAnimation(target, movement)
 
-    setTimeout(() => removeAnimation(target, movement), animationDuration*2)
+    doAfter(clearAllAnimations, animationDuration*2)
   }
   
   /**
@@ -126,7 +106,7 @@ export const createRenderEngine = ({
       for (let x=0; x<width; x++) {
         const value = gameGrid[y][x]
         const fall = changes[y][x]?`fall-${changes[y][x]}-blocks`:''
-        gameGridHTML.push(`<div draggable="false" row="${y}" col="${x}" class="gem far fa-2x ${getEmoji(value)} ${fall}"></div>`)
+        gameGridHTML.push(`<div draggable="false" row="${y}" col="${x}" class="gem far ${getEmoji(value)} ${fall}"></div>`)
       }
 
       gameGridHTML.push('</div>')
@@ -135,7 +115,7 @@ export const createRenderEngine = ({
 
     renderObject.innerHTML = gameGridHTML.join('')
 
-    setTimeout(() => clearAllAnimations(), animationDuration*2)
+    doAfter(clearAllAnimations, animationDuration*2)
   }
 
   start()

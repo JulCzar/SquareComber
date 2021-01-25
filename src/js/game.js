@@ -1,6 +1,8 @@
+import MovementInfo from './models/movement.js'
 import Combo from './models/combo.js'
 import Item from './models/item.js'
-import MovementInfo from './models/movement.js'
+
+import { doAfter } from './utils/wait.js'
 
 const EMPTY_ITEM = new Item(-1, -1, 2, -1)
 const REGISTERED_ITEMS_QUANTITY = 5
@@ -8,6 +10,20 @@ const REGISTERED_ITEMS_QUANTITY = 5
 export const createGameEnvironment = ({ width = 4, height = 4, animationDuration }) => {
   const grid = [[EMPTY_ITEM]]
   const observers = []
+  const state = {
+    lock: {
+      externalGridChanges: false
+    }
+  }
+
+  const lockExternalGridChanges = () => {
+    console.log('locking grid to external changes')
+    state.lock.externalGridChanges = true
+  }
+  const unlockExternalGridChanges = () => {
+    console.log('unlocking grid to external changes')
+    state.lock.externalGridChanges = false
+  }
 
   /**
    * @param {(gridData: number[][], gridChanges:number[][]) => void} observer 
@@ -85,9 +101,7 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
       }
     }
 
-    do {
-      dropValuesOnce()
-    }while (hasFloatingItems())
+    do { dropValuesOnce() } while (hasFloatingItems())
 
     fillEmptyValues()
   }
@@ -156,8 +170,6 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
    * @param {Combo[]} comboList 
    */
   const removeCombos = comboList => {
-    if (!comboList.length) return
-
     for (const combo of comboList)
       for (const item of combo.items)
         item.popValue()
@@ -169,26 +181,27 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
    * 
    * @param {*} animDuration 
    */
-  const handleCombos = (animDuration = animationDuration) => {
+  const handleCombos = async (animDuration = animationDuration) => {
+    const notifyObservers = () => {
+      notifyAll()
+
+      handleCombos(animDuration)
+    }
+
     const combos = findCombos(grid)
 
     console.log(`found ${combos.length} valid combos.`)
+    
+    if (!combos.length) return unlockExternalGridChanges()
 
     removeCombos(combos)
     
     updateGridValues()
-    
-    if (combos.length) {
-      if (animDuration) {setTimeout(() => {
-        notifyAll()
 
-        handleCombos(animDuration)
-      }, animDuration)
-      }else {
-        notifyAll()
-
-        handleCombos(0)
-      }
+    if (animDuration)
+      await doAfter(notifyObservers, animDuration)
+    else {
+      notifyObservers()
     }
   }
 
@@ -206,6 +219,10 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
    * @param {{movement: MovementInfo, target: HTMLElement}} movementInfos 
    */
   const handleMovement = ({ movement, target }) => {
+    if (state.lock.externalGridChanges) return console.warn('touch event ignored due to lock state')
+
+    lockExternalGridChanges()
+
     const { x, y, direction } = movement
     const row = Number(target.attributes.row.value)
     const col = Number(target.attributes.col.value)
@@ -225,10 +242,10 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
       updateItemPosition(row, col, x, y)
 
       console.log('invalid move')
+
+      unlockExternalGridChanges()
     }
     else handleCombos()
-
-    updateGridValues()
   }
 
   /**
