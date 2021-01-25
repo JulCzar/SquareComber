@@ -206,7 +206,7 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
   }
 
   const updateItemPosition = (row, col, x, y) => {
-    if (row+y <= 0 || row+y>=height || col+x<=0 || col+x>=width) return
+    if (row <= 0 || row+y>=height || col<=0 || col+x>=width) return
 
     const aux = grid[row][col]
     const sideItem = grid[row+y][col+x]

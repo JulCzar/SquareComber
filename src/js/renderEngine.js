@@ -61,8 +61,6 @@ export const createRenderEngine = ({
     const row = Number(target.attributes.row.value)
     const col = Number(target.attributes.col.value)
 
-    if (row+y<=0||col+x<=0||col+x>=height||row+y>=width) return
-
     target.classList.add(`movement_${direction}`)
 
     for (const gem of document.querySelectorAll(animatedInterface)) {
@@ -87,6 +85,21 @@ export const createRenderEngine = ({
    * @param {HTMLElement} target
    */
   const triggerSwapAnimation = ({movement, target}) => {
+    const isMovingOutsideGrid = () => {
+      const { direction } = movement
+      const row = Number(target.attributes.row.value)
+      const col = Number(target.attributes.col.value)
+
+      const isMovingFirstRowUp = row===0 && direction === 'up'
+      const isMovingLastRowDown = row===height-1 && direction === 'down'
+      const isMovingFirstColumnLeft = col===0 && direction === 'left'
+      const isMovingLastColRight = col===height-1 && direction === 'right'
+
+      return isMovingFirstRowUp || isMovingLastRowDown || isMovingFirstColumnLeft || isMovingLastColRight
+    }
+
+    if (isMovingOutsideGrid()) return
+
     notifyAll(movement, target)
 
     fireAnimation(target, movement)
