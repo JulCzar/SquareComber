@@ -20,43 +20,10 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
     const publicGrid = grid.map(row => row.map(i => i.value))
     const gridChanges = grid.map(row => row.map(i => i.getFallCount()))
 
-    console.log(`notifying ${observers.length} observers about a grid change`, gridChanges)
+    console.log(`notifying ${observers.length} observers about a grid change`)
 
     for (const observer of observers) observer(publicGrid, gridChanges)
   }
-
-  /**
-   * @param {number} yIncrement 
-   * @param {number} xIncrement 
-   */
-  const createGetItem = (yIncrement, xIncrement) => {
-    /**
-     * @param {Item} item 
-     */
-    const func = item => {
-      const { x, y } = item.position
-
-      for (const row of grid) {
-        for (const item of row) {
-          const { position } = item
-
-          if (position.x !== x+xIncrement) continue
-          if (position.y !== y+yIncrement) continue
-
-          return item
-        }
-      }
-
-      return EMPTY_ITEM
-    }
-    
-    return func
-  }
-
-  const getItemAbove = createGetItem(-1, 0)
-  const getItemBellow = createGetItem(+1, 0)
-  const getItemRight = createGetItem(0, +1)
-  const getItemLeft = createGetItem(0, -1)
 
   const createInitialGrid = () => {
     for(let y=0; y<height; y++) {
