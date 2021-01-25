@@ -6,7 +6,7 @@ const gameConfig = {
   width: 10,
   height: 10,
   gridSize: 30,
-  animationDuration: 250,
+  animationDuration: 500,
   renderInterface: '#app',
   animatedInterface: '.gem',
   touchInterface: "#app"

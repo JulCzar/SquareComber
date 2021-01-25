@@ -10,7 +10,7 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
   const observers = []
 
   /**
-   * @param {(gridData: grid) => void} observer 
+   * @param {(gridData: number[][], gridChanges:number[][]) => void} observer 
    */
   const subscribe = observer => {
     observers.push(observer)
@@ -20,10 +20,43 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
     const publicGrid = grid.map(row => row.map(i => i.value))
     const gridChanges = grid.map(row => row.map(i => i.getFallCount()))
 
-    console.log(`notifying ${observers.length} observers about a grid change`)
+    console.log(`notifying ${observers.length} observers about a grid change`, gridChanges)
 
     for (const observer of observers) observer(publicGrid, gridChanges)
   }
+
+  /**
+   * @param {number} yIncrement 
+   * @param {number} xIncrement 
+   */
+  const createGetItem = (yIncrement, xIncrement) => {
+    /**
+     * @param {Item} item 
+     */
+    const func = item => {
+      const { x, y } = item.position
+
+      for (const row of grid) {
+        for (const item of row) {
+          const { position } = item
+
+          if (position.x !== x+xIncrement) continue
+          if (position.y !== y+yIncrement) continue
+
+          return item
+        }
+      }
+
+      return EMPTY_ITEM
+    }
+    
+    return func
+  }
+
+  const getItemAbove = createGetItem(-1, 0)
+  const getItemBellow = createGetItem(+1, 0)
+  const getItemRight = createGetItem(0, +1)
+  const getItemLeft = createGetItem(0, -1)
 
   const createInitialGrid = () => {
     for(let y=0; y<height; y++) {
@@ -37,59 +70,26 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
   }
 
   const updateGridValues = () => {
-    function getItemAbove(x, y) {
-      for (let i=height-1; i>=0; i--) {
-        for (const item of grid[i]) {
-          const { position } = item
-
-          if (position.x !== x) continue
-          if (position.y !== y-1) continue
-
-          return item
-        }
-      }
-
-      return EMPTY_ITEM
-    }
-
-    /**
-     * @param {Item} item 
-     * @returns {number}
-     */
-    const dropValueAbove = item => {
-      const { x, y } = item.position
-
-      if (y<=0) return -1
-
-      const itemAbove = getItemAbove(x, y)
-
-      if (itemAbove.isEmpty()) return dropValueAbove(itemAbove)
-
-      return itemAbove.popValue()
-    }
-
     const dropValuesOnce = () => {
-      for (let y=0; y<height;y++) {
-        const row = grid[y]
-        const rowBellow = grid[y+1] || []
+      const reverseGrid = [...grid].reverse()
 
-        for (let x=0; x<width;x++) {
-          const currentItem = row[x]
-          const itemBellow = rowBellow[x]
+      for (let y=0;y<height;y++) {
+        const row = reverseGrid[y]
+        const rowAbove = reverseGrid[y+1] || []
 
-          if (!currentItem.isEmpty()) {
-            if (y+1>=height) continue
+        for (let x=0; x<width; x++) {
+          const item = row[x]
+          const itemAbove = rowAbove[x] || EMPTY_ITEM
 
-            if (itemBellow.isEmpty()) {
-              itemBellow.fall()
-              itemBellow.value = currentItem.popValue()
-            }
+          if (item.isEmpty()) {
+            item.value = itemAbove.popValue()
+            item.increaseFall()
           }
         }
       }
     }
 
-    const verifyGrid = () => {
+    const hasFloatingItems = () => {
       for (let y=0; y<height;y++) {
         const row = grid[y]
         const rowBellow = grid[y+1] || []
@@ -112,19 +112,15 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
       for (const row of grid) {
         for (const item of row) {
           if (item.isEmpty()) {
-            item.fall()
             item.sortNewValue()
           }
         }
       }
     }
 
-    dropValuesOnce()
+    while (hasFloatingItems()) dropValuesOnce()
 
-    const hasToBeRecursive = verifyGrid()
-
-    if (hasToBeRecursive) updateGridValues()
-    else fillEmptyValues()
+    fillEmptyValues()
   }
 
   /**
@@ -210,11 +206,9 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
     console.log(`found ${combos.length} valid combos.`)
 
     removeCombos(combos)
-
-    // countFallingItems()
     
     updateGridValues()
-
+    
     if (combos.length) {
       if (animDuration) {setTimeout(() => {
         notifyAll()

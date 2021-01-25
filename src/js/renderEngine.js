@@ -2,22 +2,24 @@ import MovementInfo from './models/movement.js'
 
 export const createRenderEngine = ({
   renderInterface,
+  animatedInterface,
   width = 4,
   height = 4,
   gridSize,
-  animationDuration = 250,
-  animatedInterface
+  animationDuration = 250
 }) => {
   if (!animatedInterface) throw new Error('target interface of animation engine not declared')
-  const app = document.querySelector(renderInterface)
+  const renderObject = document.querySelector(renderInterface)
+  const knownAnimations = []
   const observers = []
-
+  
   const generateFallingAnimations = () => {
     const dropCss = []
 
     for (let i=height; i>0; i--) {
       dropCss.push(`@keyframes falling-${i}-blocks { 0% { transform: translateY(-${i*gridSize}px) }; 100% {} }`)
-      dropCss.push(` .fall-${i}-blocks { animation: falling-${i}-blocks; animation-duration: calc(var(--animationDuration)/2); }`)
+      dropCss.push(`.fall-${i}-blocks, .fall-${i}-blocks.movement-up, .fall-${i}-blocks.movement-down, .fall-${i}-blocks.movement-left, .fall-${i}-blocks.movement-right { animation: falling-${i}-blocks; animation-duration: calc(var(--animationDuration)/2); }`)
+      knownAnimations.push(`fall-${i}-blocks`)
     }
 
     return dropCss.join('')
@@ -27,7 +29,7 @@ export const createRenderEngine = ({
     console.log('animation engine started')
 
     const style = document.createElement('style')
-    style.innerText += `body { --animationDuration: ${animationDuration*2}ms; --gridSize: ${gridSize}px; }`
+    style.innerText += `body { --animationDuration: ${animationDuration*2}ms; --gridSize: ${gridSize}px; } #block { z-index: 9999;cursor: not-allowed;width: 100%;height: 100%;position: absolute; }`
     style.innerText += generateFallingAnimations()
     document.head.append(style)
     
@@ -91,6 +93,13 @@ export const createRenderEngine = ({
     }
   }
 
+  const clearAllAnimations = () => {
+    const itemsToAnimate = document.querySelectorAll(animatedInterface)
+    for (const item of itemsToAnimate) {
+      knownAnimations.forEach(anim => item.classList.remove(anim))
+    }
+  }
+
   /**
    * @param {MovementInfo} movement 
    * @param {HTMLElement} target
@@ -107,7 +116,7 @@ export const createRenderEngine = ({
    * @param {number[][]} gameGrid 
    */
   const render = (gameGrid, changes) => {
-    const emojis = ['fa-grin-tongue', 'fa-grin-hearts', 'fa-grin-stars', 'fa-grin-beam-sweat', 'fa-flushed']
+    const getEmoji = value => ['fa-grin-tongue', 'fa-grin-hearts', 'fa-grin-stars', 'fa-grin-beam-sweat', 'fa-flushed'][value] || ''
 
     const gameGridHTML = ['<div class="table">']
     
@@ -117,14 +126,16 @@ export const createRenderEngine = ({
       for (let x=0; x<height; x++) {
         const value = gameGrid[y][x]
         const fall = changes[y][x]?`fall-${changes[y][x]}-blocks`:''
-        gameGridHTML.push(`<div draggable="false" row="${y}" col="${x}" class="gem far ${emojis[value] || ''} ${fall}"></div>`)
+        gameGridHTML.push(`<div draggable="false" row="${y}" col="${x}" class="gem far ${getEmoji(value)} ${fall}"></div>`)
       }
 
       gameGridHTML.push('</div>')
     }
     gameGridHTML.push('</div>')
 
-    app.innerHTML = gameGridHTML.join('')
+    renderObject.innerHTML = gameGridHTML.join('')
+
+    setTimeout(() => clearAllAnimations(), animationDuration*2)
   }
 
   start()
