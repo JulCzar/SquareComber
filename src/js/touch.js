@@ -1,5 +1,3 @@
-import MovementInfo from './models/movement.js'
-
 /**
  * @param {string} touchableInterfaceSelector the selector for the touch event listener
  */
@@ -24,7 +22,7 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
     console.log(`notifying ${observers.length} observer about a touch event`)
 
     for (const observer of observers)
-      observer({movement, target})
+      observer(movement, target)
   }
   
   /**
@@ -92,36 +90,19 @@ export const startTouchSupport = (touchableInterfaceSelector) => {
   const movingSwipe = (diffX, diffY) => {
     if (Math.abs(diffX) < 35 && Math.abs(diffY) < 35) return
     
-    let x, y, direction
+    const response = {}
 
-    if (Math.abs(diffX) > Math.abs(diffY)) {
-      y = 0
+    const isHorizontalMovement = Math.abs(diffX) > Math.abs(diffY)
 
-      if (diffX > 0) {
-        x = 1
-        direction = 'right'
-      }
-      else {
-        x = -1
-        direction = 'left'
-      }
-    } else {
-      x = 0
-
-      if (diffY > 0) {
-        y = 1
-        direction = 'down'
-      }
-      else {
-        y = -1
-        direction = 'up'
-      }
-    }
+    if (isHorizontalMovement)
+      response.direction = (diffX > 0)?'right':'left'
+    else 
+      response.direction = (diffY > 0)?'down':'up'
 
     state.initialX = null;
     state.initialY = null;
 
-    notifyAll(new MovementInfo(x, y, direction), state.initialTarget)
+    notifyAll(response.direction, state.initialTarget)
   }
 
   const endSwipe = () => {

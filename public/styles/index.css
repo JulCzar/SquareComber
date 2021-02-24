@@ -1,5 +1,4 @@
 @charset "UTF-8";
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css');
 @import './animations.css';
 
 * {
@@ -43,22 +42,10 @@ body {
   width: var(--gridSize);
 }
 
-.fa-grin-tongue {
-  color: teal;
-}
-
-.fa-grin-hearts {
-  color: red;
-}
-
-.fa-grin-stars {
-  color: #666654;
-}
-
-.fa-flushed {
-  color: pink;
-}
-
-.fa-grin-beam-sweat {
-  color: purple;
+.gem > div {
+  border-radius: calc(50% - 5px);
+  border: solid transparent;
+  box-sizing: border-box;
+  width: 80%;
+  height: 80%;
 }

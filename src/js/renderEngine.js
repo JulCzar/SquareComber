@@ -1,4 +1,5 @@
-import MovementInfo from './models/movement.js'
+
+import { getIncrements } from './utils/getIncrementsByDirection.js'
 import { doAfter } from './utils/wait.js'
 
 export const createRenderEngine = ({
@@ -44,31 +45,44 @@ export const createRenderEngine = ({
 
   /**
    * @param {HTMLElement} target 
-   * @param {MovementInfo} movement 
+   * @param {'up' | 'down' | 'left' | 'right'} direction 
    */
-  const notifyAll = (movement, target) => {
+  const notifyAll = (direction, target) => {
     console.log(`notifying ${observers.length} observers about an animation start`)
 
-    observers.forEach(observer => observer({movement, target}))
+    observers.forEach(observer => observer(direction, target))
   }
+
+  
+
+  /**
+   * 
+   * @param {'up' | 'down' | 'left' | 'right'} direction 
+   */
+  const getOppositeDirection = direction => ({
+    up: 'down',
+    down: 'up',
+    left: 'right',
+    right: 'left'
+  }[direction])
 
   /**
    * @param {HTMLElement} target 
-   * @param {MovementInfo} movement 
+   * @param {'up' | 'down' | 'left' | 'right'} direction 
    */
-  const fireAnimation = (target, movement) => {
-    const { x, y, direction } = movement
+  const fireAnimation = (target, direction) => {
+    const { xIncrement , yIncrement } = getIncrements(direction)
     const row = Number(target.attributes.row.value)
     const col = Number(target.attributes.col.value)
 
     target.classList.add(`movement_${direction}`)
 
     for (const gem of document.querySelectorAll(animatedInterface)) {
-      const oppositeDirection = MovementInfo.getOppositeDirection(direction)
+      const oppositeDirection = getOppositeDirection(direction)
       const gemRow = Number(gem.attributes.row.value)
       const gemCol = Number(gem.attributes.col.value)
 
-      if (gemRow == (row + y) && gemCol == (col + x))
+      if (gemRow == (row + yIncrement) && gemCol == (col + xIncrement))
         gem.classList.add(`movement_${oppositeDirection}`)
     }
   }
@@ -81,12 +95,11 @@ export const createRenderEngine = ({
   }
 
   /**
-   * @param {MovementInfo} movement 
+   * @param {'up' | 'down' | 'left' | 'right'} direction 
    * @param {HTMLElement} target
    */
-  const triggerSwapAnimation = ({movement, target}) => {
+  const triggerSwapAnimation = (direction, target) => {
     const isMovingOutsideGrid = () => {
-      const { direction } = movement
       const row = Number(target.attributes.row.value)
       const col = Number(target.attributes.col.value)
 
@@ -100,9 +113,9 @@ export const createRenderEngine = ({
 
     if (isMovingOutsideGrid()) return
 
-    notifyAll(movement, target)
+    notifyAll(direction, target)
 
-    fireAnimation(target, movement)
+    fireAnimation(target, direction)
 
     doAfter(clearAllAnimations, animationDuration*2)
   }
@@ -111,7 +124,7 @@ export const createRenderEngine = ({
    * @param {number[][]} gameGrid 
    */
   const render = (gameGrid, changes) => {
-    const getEmoji = value => ['fa-grin-tongue', 'fa-grin-hearts', 'fa-grin-stars', 'fa-grin-beam-sweat', 'fa-flushed'][value] || ''
+    const getColor = value => ['teal', 'red', '#666654', 'pink', 'purple'][value]
 
     const gameGridHTML = ['<div class="table">']
     
@@ -121,7 +134,9 @@ export const createRenderEngine = ({
       for (let x=0; x<width; x++) {
         const value = gameGrid[y][x]
         const fall = changes[y][x]?`fall-${changes[y][x]}-blocks`:''
-        gameGridHTML.push(`<div draggable="false" row="${y}" col="${x}" class="gem far ${getEmoji(value)} ${fall}"></div>`)
+        gameGridHTML.push(`<div row="${y}" col="${x}"  draggable="false" class="gem far ${fall}">
+          <div row="${y}" col="${x}" style="background-color: ${getColor(value)}"}></div>
+        </div>`)
       }
 
       gameGridHTML.push('</div>')

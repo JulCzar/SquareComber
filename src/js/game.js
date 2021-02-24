@@ -1,6 +1,6 @@
-import MovementInfo from './models/movement.js'
 import Combo from './models/combo.js'
 import Item from './models/item.js'
+import { getIncrements } from './utils/getIncrementsByDirection.js'
 
 import { doAfter } from './utils/wait.js'
 
@@ -15,6 +15,8 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
       externalGridChanges: false
     }
   }
+
+  const isGridLocked = () => state.lock.externalGridChanges
 
   const lockExternalGridChanges = () => {
     console.log('locking grid to external changes')
@@ -205,7 +207,13 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
     }
   }
 
-  const updateItemPosition = (row, col, { x, y, direction }) => {
+  /**
+   * 
+   * @param {number} row 
+   * @param {number} col 
+   * @param {'up' | 'down' | 'left' | 'right'} direction 
+   */
+  const updateItemPosition = (row, col, direction) => {
     const isMovingOutsideGrid = () => {
       const isMovingFirstRowUp = row===0 && direction === 'up'
       const isMovingLastRowDown = row===height-1 && direction === 'down'
@@ -216,40 +224,44 @@ export const createGameEnvironment = ({ width = 4, height = 4, animationDuration
     }
     if (isMovingOutsideGrid()) return
 
+    const { xIncrement, yIncrement } = getIncrements(direction)
+
     const aux = grid[row][col]
-    const sideItem = grid[row+y][col+x]
+    const sideItem = grid[row + yIncrement][col+xIncrement]
     
     if (!aux || !sideItem || aux.isEmpty() || sideItem.isEmpty()) return
 
-    grid[row][col] = grid[row+y][col+x]
-    grid[row+y][col+x] = aux
+    grid[row][col] = grid[row+yIncrement][col+xIncrement]
+    grid[row+yIncrement][col+xIncrement] = aux
   }
 
   /**
-   * @param {{movement: MovementInfo, target: HTMLElement}} movementInfos 
+   * @param {'up' | 'down' | 'left' | 'right'} direction
+   * @param {HTMLElement} target
    */
-  const handleMovement = ({ movement, target }) => {
-    if (state.lock.externalGridChanges) return console.warn('touch event ignored due to lock state')
+  const handleMovement = (direction, target) => {
+    console.log(direction, target)
+    if (isGridLocked()) return console.warn('touch event ignored due to lock state')
 
     lockExternalGridChanges()
 
-    const { x, y, direction } = movement
+    const { xIncrement, yIncrement } = getIncrements(direction)
     const row = Number(target.attributes.row.value)
     const col = Number(target.attributes.col.value)
 
-    const rowIsValid = row + y >= 0 && row + y <= height
-    const colIsValid = col + x >= 0 && col + x <= width
+    const rowIsValid = row + yIncrement >= 0 && row + yIncrement <= height
+    const colIsValid = col + xIncrement >= 0 && col + xIncrement <= width
 
     if (!rowIsValid || !colIsValid) return unlockExternalGridChanges()
 
-    updateItemPosition(row, col, movement)
+    updateItemPosition(row, col, direction)
 
     console.log(`moving ${row}-${col} ${direction}`)
 
     const combos = findCombos(grid)
 
     if (!combos.length)  {
-      updateItemPosition(row, col, x, y)
+      updateItemPosition(row, col, direction)
 
       console.log('invalid move')
 
